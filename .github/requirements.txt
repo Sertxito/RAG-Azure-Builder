@@ -1,0 +1,37 @@
+# Python dependencies for RAG system
+# Run: pip install -r requirements.txt
+
+# Azure SDKs
+azure-search-documents>=11.4.0
+azure-identity>=1.14.0
+azure-monitor-opentelemetry>=1.1.0
+azure-storage-blob>=12.19.0
+
+# OpenAI and LLMs
+openai>=1.5.0
+
+# Data processing
+pandas>=2.0.0
+openpyxl>=3.1.0  # Excel support
+python-docx>=0.8.11  # Word document support
+PyPDF2>=3.0.1  # PDF support
+
+# Environment and logging
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+requests>=2.31.0
+
+# Microsoft Graph & SharePoint
+msal>=1.24.0  # OAuth 2.0 authentication
+msgraph-core>=1.0.0  # Microsoft Graph client
+
+# Development (optional)
+pytest>=7.4.0
+black>=23.0.0
+pylint>=3.0.0
+
+# Type checking
+typing-extensions>=4.8.0
+
+# Utilities
+tqdm>=4.66.0  # Progress bars
