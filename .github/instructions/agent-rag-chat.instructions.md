@@ -3,30 +3,30 @@
 
 
 
-**Purpose:** Multi-turn conversational RAG with context memory. Interactive mode.
+**Propósito:** RAG conversacional multi-turno con memoria de contexto. Modo interactivo.
 
-**User Entry:** `copilot-cli run .github/agents/rag-chat.agent.md`
+**Entrada del usuario:** `copilot-cli run .github/agents/rag-chat.agent.md`
 
-**Expected Duration:** Ongoing (user decides when to exit)
-
----
-
-## âœ… Chat Mode Checklist
-
-- [ ] Load conversation history (if any)
-- [ ] Show welcome message
-- [ ] Enter chat loop (read user input)
-- [ ] For each message:
-  - [ ] Search documents
-  - [ ] Generate response with context
-  - [ ] Show response + sources
-  - [ ] Save to history
-- [ ] Allow context switching ("reset", "export", "quit")
-- [ ] Save final session to outputs/
+**Duración esperada:** Continua (el usuario decide cuándo salir)
 
 ---
 
-## Session Initialization (1 min)
+## ✅ Checklist del Modo Chat
+
+- [ ] Cargar historial de conversación (si existe)
+- [ ] Mostrar mensaje de bienvenida
+- [ ] Entrar en bucle de chat (leer entrada del usuario)
+- [ ] Para cada mensaje:
+  - [ ] Buscar documentos
+  - [ ] Generar respuesta con contexto
+  - [ ] Mostrar respuesta + fuentes
+  - [ ] Guardar en historial
+- [ ] Permitir cambio de contexto ("reset", "export", "quit")
+- [ ] Guardar sesión final en outputs/
+
+---
+
+## Inicialización de Sesión (1 min)
 
 ```python
 import os
@@ -54,34 +54,34 @@ conversation = {
 }
 
 print(f"""
-ðŸ¤– RAG Chat Started (Session: {session_id})
+🤖 RAG Chat Iniciado (Sesión: {session_id})
 
-Commands:
-  â€¢ /history    - Show conversation history
-  â€¢ /reset      - Clear conversation context
-  â€¢ /export     - Save session
-  â€¢ /help       - Show help
-  â€¢ /quit       - Exit
+Comandos:
+  • /history    - Mostrar historial de conversación
+  • /reset      - Limpiar contexto de conversación
+  • /export     - Guardar sesión
+  • /help       - Mostrar ayuda
+  • /quit       - Salir
 
-Type your question or command:
+Escribe tu pregunta o comando:
 """)
 ```
 
 ---
 
-## Chat Loop (Ongoing)
+## Bucle de Chat (Continuo)
 
 ```python
 import time
 
 while True:
-    # Read user input
+    # Leer entrada del usuario
     user_input = input("\n> ").strip()
     
     if not user_input:
         continue
     
-    # Handle commands
+    # Manejar comandos
     if user_input.lower() == "/quit":
         break
     elif user_input.lower() == "/history":
@@ -89,7 +89,7 @@ while True:
         continue
     elif user_input.lower() == "/reset":
         conversation["turns"] = []
-        print("âœ… Conversation context reset")
+        print("✅ Contexto de conversación reiniciado")
         continue
     elif user_input.lower() == "/export":
         save_session(conversation, session_file)
@@ -98,43 +98,43 @@ while True:
         show_help()
         continue
     
-    # Process query
-    print("\nâ³ Searching documents...")
+    # Procesar consulta
+    print("\n⏳ Buscando documentos...")
     start_time = time.time()
     
-    # 1. Search documents with context from previous turns
+    # 1. Buscar documentos con contexto de turnos anteriores
     query = reformulate_with_context(user_input, conversation["turns"])
     search_results = search_rag(query, top_k=5)
     search_latency = (time.time() - start_time) * 1000
     
-    print(f"   Found {len(search_results)} relevant documents ({search_latency:.0f}ms)")
+    print(f"   Se encontraron {len(search_results)} documentos relevantes ({search_latency:.0f}ms)")
     
-    # 2. Generate response with context
-    print("â³ Generating response...")
+    # 2. Generar respuesta con contexto
+    print("⏳ Generando respuesta...")
     start_time = time.time()
     
     response, tokens_used, citations = generate_response_with_context(
         user_query=user_input,
         search_results=search_results,
-        conversation_history=conversation["turns"][-5:]  # Last 5 turns for context
+        conversation_history=conversation["turns"][-5:]  # Últimos 5 turnos para contexto
     )
     
     inference_latency = (time.time() - start_time) * 1000
     
-    # 3. Display response
+    # 3. Mostrar respuesta
     print(f"""
-ðŸ“ Answer:
+🔍 Respuesta:
 {response}
 
-ðŸ“š Sources:
+📚 Fuentes:
 """)
     for i, citation in enumerate(citations, 1):
         print(f"   {i}. {citation['file']} (p. {citation.get('page', '?')})")
     
-    print(f"\nâ±ï¸  Latency: {search_latency:.0f}ms (search) + {inference_latency:.0f}ms (inference) = {search_latency + inference_latency:.0f}ms total")
-    print(f"ðŸ’° Cost: ${tokens_used * 0.0001:.4f}")
+    print(f"\n⏱️  Latencia: {search_latency:.0f}ms (búsqueda) + {inference_latency:.0f}ms (inferencia) = {search_latency + inference_latency:.0f}ms total")
+    print(f"💰 Coste: ${tokens_used * 0.0001:.4f}")
     
-    # 4. Save turn to history
+    # 4. Guardar turno en historial
     turn = {
         "turn_number": len(conversation["turns"]) + 1,
         "user_query": user_input,
@@ -149,38 +149,38 @@ while True:
     
     conversation["turns"].append(turn)
     
-    # 5. Update stats
+    # 5. Actualizar estadísticas
     conversation["stats"]["total_questions"] += 1
     conversation["stats"]["total_tokens"] += tokens_used
     conversation["stats"]["total_cost"] += tokens_used * 0.0001
     
-    # Auto-save every 5 turns
+    # Auto-guardar cada 5 turnos
     if conversation["stats"]["total_questions"] % 5 == 0:
         save_session(conversation, session_file)
-        print(f"ðŸ’¾ Session auto-saved (turn {conversation['stats']['total_questions']})")
+        print(f"💾 Sesión auto-guardada (turno {conversation['stats']['total_questions']})")
 ```
 
 ---
 
-## Function: Reformulate with Context
+## Función: Reformular con Contexto
 
-**Smart query rewriting using previous turns:**
+**Reescritura inteligente de consultas usando turnos anteriores:**
 
 ```python
 def reformulate_with_context(user_query, history):
     """
-    Reformulate user query to include implicit context from previous turns.
+    Reformula la consulta del usuario para incluir contexto implícito de turnos anteriores.
     
-    Example:
-    Turn 1: Q: "Â¿CÃ³mo despliego el sistema?"
-    Turn 2: Q: "Â¿Y si falla?"
-    â†’ Reformulated: "Â¿QuÃ© pasa si falla el despliegue del sistema?"
+    Ejemplo:
+    Turno 1: Q: "¿Cómo despliego el sistema?"
+    Turno 2: Q: "¿Y si falla?"
+    → Reformulado: "¿Qué pasa si falla el despliegue del sistema?"
     """
     
     if not history:
-        return user_query  # First question, no context
+        return user_query  # Primera pregunta, sin contexto
     
-    # Get previous question + answer
+    # Obtener pregunta + respuesta anterior
     last_turn = history[-1]
     previous_context = f"""
 Previous question: {last_turn['user_query']}
@@ -188,7 +188,7 @@ Previous answer: {last_turn['ai_response'][:200]}...
 Current question: {user_query}
 """
     
-    # Use LLM to reformulate
+    # Usar LLM para reformular
     from azure.openai import AzureOpenAI
     client = AzureOpenAI()
     
@@ -202,7 +202,7 @@ Rewritten standalone question:"""
         model="gpt-4o",
         messages=[{"role": "user", "content": reformulation_prompt}],
         max_tokens=100,
-        temperature=0.0  # Deterministic
+        temperature=0.0  # Determinístico
     )
     
     reformulated = response.choices[0].message.content.strip()
@@ -211,14 +211,14 @@ Rewritten standalone question:"""
 
 ---
 
-## Function: Search RAG
+## Función: Búsqueda RAG
 
 ```python
 from azure.search.documents import SearchClient
 
 def search_rag(query, top_k=5):
     """
-    Hybrid search: semantic + keyword
+    Búsqueda híbrida: semántica + palabras clave
     """
     from azure.search.documents.models import QueryType, QueryCaptionType
     
@@ -228,11 +228,11 @@ def search_rag(query, top_k=5):
         credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_API_KEY"))
     )
     
-    # Hybrid search (semantic + keyword)
+    # Búsqueda híbrida (semántica + palabras clave)
     results = search_client.search(
         search_text=query,
         query_type=QueryType.SEMANTIC,
-        query_language="es",  # Spanish
+        query_language="es",  # Español
         top=top_k,
         query_caption=QueryCaptionType.EXTRACTIVE,
         search_fields=["content"],
@@ -244,14 +244,14 @@ def search_rag(query, top_k=5):
 
 ---
 
-## Function: Generate Response with Context
+## Función: Generar Respuesta con Contexto
 
 ```python
 def generate_response_with_context(user_query, search_results, conversation_history):
     """
-    Generate response using:
-    1. Retrieved documents
-    2. Previous conversation turns
+    Genera respuesta usando:
+    1. Documentos recuperados
+    2. Turnos anteriores de conversación
     """
     
     from azure.openai import AzureOpenAI
@@ -262,7 +262,7 @@ def generate_response_with_context(user_query, search_results, conversation_hist
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
     )
     
-    # Build context
+    # Construir contexto
     document_context = "\n\n".join([
         f"Document: {r.get('file', 'unknown')}\nContent:\n{r.get('content', '')}"
         for r in search_results[:5]
@@ -270,10 +270,10 @@ def generate_response_with_context(user_query, search_results, conversation_hist
     
     conversation_context = "\n".join([
         f"Q{i+1}: {turn['user_query']}\nA{i+1}: {turn['ai_response'][:100]}..."
-        for i, turn in enumerate(conversation_history[-3:])  # Last 3 turns
+        for i, turn in enumerate(conversation_history[-3:])  # Últimos 3 turnos
     ])
     
-    # Prepare prompt
+    # Preparar prompt
     system_prompt = """You are an expert RAG assistant. 
     
 Use the provided documents to answer questions accurately.
@@ -298,7 +298,7 @@ USER QUESTION:
 
 Provide a clear, concise answer with specific citations."""
     
-    # Call LLM
+    # Llamar al LLM
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
@@ -310,11 +310,11 @@ Provide a clear, concise answer with specific citations."""
         top_p=0.95
     )
     
-    # Extract response and tokens
+    # Extraer respuesta y tokens
     answer = response.choices[0].message.content
     tokens_used = response.usage.total_tokens
     
-    # Extract citations from answer
+    # Extraer citas de la respuesta
     citations = [
         {
             "file": r.get("file", "unknown"),
@@ -330,50 +330,50 @@ Provide a clear, concise answer with specific citations."""
 
 ---
 
-## Command: Show History
+## Comando: Mostrar Historial
 
 ```python
 def show_history(conversation):
-    """Display conversation history"""
+    """Muestra el historial de conversación"""
     if not conversation["turns"]:
-        print("No conversation history yet.")
+        print("Aún no hay historial de conversación.")
         return
     
-    print(f"\nðŸ“œ Conversation History ({len(conversation['turns'])} turns):\n")
+    print(f"\n📜 Historial de Conversación ({len(conversation['turns'])} turnos):\n")
     
     for turn in conversation["turns"]:
-        print(f"Turn {turn['turn_number']}:")
-        print(f"  Q: {turn['user_query']}")
-        print(f"  A: {turn['ai_response'][:150]}...")
-        print(f"  Sources: {len(turn['citations'])} docs | Latency: {turn['search_latency_ms'] + turn['inference_latency_ms']:.0f}ms")
+        print(f"Turno {turn['turn_number']}:")
+        print(f"  P: {turn['user_query']}")
+        print(f"  R: {turn['ai_response'][:150]}...")
+        print(f"  Fuentes: {len(turn['citations'])} docs | Latencia: {turn['search_latency_ms'] + turn['inference_latency_ms']:.0f}ms")
         print()
 ```
 
 ---
 
-## Command: Reset Context
+## Comando: Reiniciar Contexto
 
 ```python
 def reset_context():
-    """Reset conversation, start fresh"""
+    """Reinicia la conversación, empieza de nuevo"""
     global conversation
     old_turns = len(conversation["turns"])
     conversation["turns"] = []
-    print(f"âœ… Conversation reset (cleared {old_turns} turns)")
+    print(f"✅ Conversación reiniciada (se eliminaron {old_turns} turnos)")
 ```
 
 ---
 
-## Command: Export Session
+## Comando: Exportar Sesión
 
 ```python
 def save_session(conversation, filepath):
-    """Save conversation to JSON"""
+    """Guarda la conversación en JSON"""
     
-    # Create outputs dir if needed
+    # Crear directorio outputs si es necesario
     Path(filepath).parent.mkdir(parents=True, exist_ok=True)
     
-    # Add end time and stats
+    # Añadir hora de fin y estadísticas
     conversation["end_time"] = datetime.now().isoformat()
     conversation["stats"]["average_latency_ms"] = (
         sum(t.get("search_latency_ms", 0) + t.get("inference_latency_ms", 0) 
@@ -384,24 +384,24 @@ def save_session(conversation, filepath):
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(conversation, f, indent=2, ensure_ascii=False)
     
-    print(f"""âœ… Session exported!
+    print(f"""✅ ¡Sesión exportada!
 
-File: {filepath}
-Turns: {conversation['stats']['total_questions']}
-Total cost: ${conversation['stats']['total_cost']:.2f}
-Avg latency: {conversation['stats']['average_latency_ms']:.0f}ms
+Archivo: {filepath}
+Turnos: {conversation['stats']['total_questions']}
+Coste total: ${conversation['stats']['total_cost']:.2f}
+Latencia media: {conversation['stats']['average_latency_ms']:.0f}ms
 """)
 ```
 
 ---
 
-## Session Exit & Save (On Quit)
+## Salida y Guardado de Sesión (Al salir)
 
 ```python
 
 
 
-print("\nðŸ‘‹ Ending chat session...\n")
+print("\n👋 Finalizando sesión de chat...\n")
 
 
 
@@ -410,16 +410,16 @@ save_session(conversation, session_file)
 
 
 print(f"""
-ðŸ“Š Session Summary:
-   Duration: {(datetime.fromisoformat(conversation['end_time']) - datetime.fromisoformat(conversation['start_time'])).total_seconds() / 60:.1f} minutes
-   Turns: {conversation['stats']['total_questions']}
-   Total tokens: {conversation['stats']['total_tokens']}
-   Total cost: ${conversation['stats']['total_cost']:.2f}
-   Avg latency: {conversation['stats']['average_latency_ms']:.0f}ms
+📊 Resumen de Sesión:
+   Duración: {(datetime.fromisoformat(conversation['end_time']) - datetime.fromisoformat(conversation['start_time'])).total_seconds() / 60:.1f} minutos
+   Turnos: {conversation['stats']['total_questions']}
+   Tokens totales: {conversation['stats']['total_tokens']}
+   Coste total: ${conversation['stats']['total_cost']:.2f}
+   Latencia media: {conversation['stats']['average_latency_ms']:.0f}ms
    
-Saved to: {session_file}
+Guardado en: {session_file}
 
-Thank you for using RAG Chat! ðŸ™
+¡Gracias por usar RAG Chat! 🙏
 """)
 
 exit(0)
@@ -427,67 +427,66 @@ exit(0)
 
 ---
 
-## Error Handling
+## Manejo de Errores
 
-### User Query Too Vague
+### Consulta del Usuario Demasiado Vaga
 ```
-âš ï¸ Your question is too vague.
+⚠️ Tu pregunta es demasiado vaga.
 
-Try being more specific:
-  âŒ "Â¿CuÃ¡l es?" â†’ Too vague
-  âœ… "Â¿CuÃ¡l es la polÃ­tica de retenciÃ³n de datos?" â†’ Better
+Intenta ser más específico:
+  ❌ "¿Cuál es?" → Demasiado vago
+  ✅ "¿Cuál es la política de retención de datos?" → Mejor
 
-Retry: 
-```
-
-### No Relevant Documents Found
-```
-âš ï¸ No documents found for: "xyz"
-
-Suggestions:
-  â€¢ Try different keywords
-  â€¢ Check what's in your knowledge/ folder
-  â€¢ Try a broader question
-
-New question:
+Reintentar: 
 ```
 
-### LLM Error
+### No Se Encontraron Documentos Relevantes
 ```
-âŒ OpenAI API error: Rate limit exceeded
+⚠️ No se encontraron documentos para: "xyz"
 
-Wait a moment and try again...
+Sugerencias:
+  • Prueba con palabras clave diferentes
+  • Comprueba qué hay en tu carpeta knowledge/
+  • Intenta una pregunta más amplia
+
+Nueva pregunta:
 ```
 
-### Search Connection Lost
+### Error del LLM
 ```
-âŒ Lost connection to Azure Search
+❌ Error de API de OpenAI: Límite de tasa excedido
 
-Troubleshooting:
-  â€¢ Check .env file
-  â€¢ Verify API keys
-  â€¢ Check Azure portal status
+Espera un momento e inténtalo de nuevo...
+```
 
-Reconnect? (Y/n)
+### Conexión de Búsqueda Perdida
+```
+❌ Se perdió la conexión con Azure Search
+
+Solución de problemas:
+  • Comprueba el archivo .env
+  • Verifica las claves API
+  • Comprueba el estado en el portal de Azure
+
+¿Reconectar? (S/n)
 ```
 
 ---
 
-## Success Criteria
+## Criterios de Éxito
 
-âœ… User can ask questions in natural language
+✅ El usuario puede hacer preguntas en lenguaje natural
 
-âœ… Responses cite document sources
+✅ Las respuestas citan las fuentes documentales
 
-âœ… Multi-turn context is preserved
+✅ El contexto multi-turno se preserva
 
-âœ… Previous questions inform new ones
+✅ Las preguntas anteriores informan las nuevas
 
-âœ… Session automatically saves
+✅ La sesión se guarda automáticamente
 
-âœ… User can export/review history
+✅ El usuario puede exportar/revisar el historial
 
-âœ… Latency is 4-6 seconds per turn
+✅ La latencia es de 4-6 segundos por turno
 
-âœ… Cost is ~$0.05 per turn
-
+✅ El coste es ~$0.05 por turno

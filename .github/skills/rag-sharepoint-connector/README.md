@@ -1,50 +1,29 @@
 # RAG SharePoint Connector
 
-Hybrid-professional SharePoint integration for RAG.
+Integración híbrida-profesional de SharePoint para RAG.
 
-## Files
+## Archivos
 
-- **sharepoint-auth.py**: OAuth 2.0 authentication (interactive + service principal)
-- **sharepoint-connector.py**: Main logic (professional + local modes)
-- **SKILL.md**: Complete documentation
+- **sharepoint-auth.py**: Autenticación OAuth 2.0 (interactiva + service principal)
+- **sharepoint-connector.py**: Lógica principal (modos profesional + local)
+- **SKILL.md**: Documentación completa
 
-## Quick Start
+## Inicio Rápido
 
 ```bash
-# Professional mode (recommended)
-python sharepoint-connector.py \
-  --mode professional \
-  --tenant-id <your-tenant-id> \
-  --client-id <your-client-id> \
-  --sharepoint-url "https://contoso.sharepoint.com/sites/Docs"
+# Modo profesional (indexer Azure Search)
+python sharepoint-connector.py --mode professional --tenant-id X --client-id Y --sharepoint-url Z
 
-# Local mode (download)
-python sharepoint-connector.py \
-  --mode local \
-  --tenant-id <your-tenant-id> \
-  --client-id <your-client-id> \
-  --sharepoint-url "https://contoso.sharepoint.com/sites/Docs" \
-  --project-root /path/to/rag-mensadef
+# Modo local (descarga a knowledge/)
+python sharepoint-connector.py --mode local --tenant-id X --client-id Y --sharepoint-url Z
 ```
 
-## Modes
+## Requisitos
 
-### Professional (Default)
+- Python 3.10+
+- `pip install msal requests tqdm`
+- App registration en Azure AD con permisos Sites.Read.All + Files.Read.All
 
-- Azure Search indexer syncs from SharePoint
-- Real-time updates (hourly)
-- No document duplication
-- Enterprise-grade
+## Ver También
 
-### Local
-
-- Download all SharePoint docs
-- Works offline after download
-- Coexists with traditional knowledge/
-- Full control over indexing
-
-## See Also
-
-- [SKILL.md](./SKILL.md) - Full documentation
-- [sharepoint-auth.py](./sharepoint-auth.py) - OAuth implementation
-- [sharepoint-connector.py](./sharepoint-connector.py) - Main connector
+- [SKILL.md](SKILL.md) — Documentación completa con setup detallado

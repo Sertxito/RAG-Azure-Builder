@@ -3,175 +3,175 @@
 
 
 
-Standards for rag-builder setup: clear onboarding, cost awareness, observability consistency.
+Estándares para la configuración de rag-builder: onboarding claro, conciencia de costes, consistencia en observabilidad.
 
-## Quick Checklist
+## Lista rápida de verificación
 
-- [ ] Python 3.10+ installed
-- [ ] `.env` configured with Azure credentials
-- [ ] Azure CLI logged in (`az login`)
-- [ ] Pre-deployment validator run (check costs)
-- [ ] Azure infrastructure deployed
-- [ ] Documents indexed in AI Search
-- [ ] RAG query test successful
+- [ ] Python 3.10+ instalado
+- [ ] `.env` configurado con credenciales de Azure
+- [ ] Azure CLI con sesión iniciada (`az login`)
+- [ ] Validador pre-despliegue ejecutado (verificar costes)
+- [ ] Infraestructura Azure desplegada
+- [ ] Documentos indexados en AI Search
+- [ ] Test de consulta RAG exitoso
 
-## Key Standards
+## Estándares clave
 
-### 1. Cost Awareness First
+### 1. Conciencia de costes primero
 
-Always run cost validator BEFORE deploying:
+Siempre ejecutar el validador de costes ANTES de desplegar:
 ```bash
 copilot-cli run .github/agents/rag-validate-deployment.agent.md
 ```
 
-This prevents $1K+ monthly surprises from:
-- Over-provisioned Search tier
-- Excessive AppInsights retention
-- Wrong OpenAI model tier
+Esto previene sorpresas de $1K+/mes por:
+- Tier de Search sobredimensionado
+- Retención excesiva de AppInsights
+- Tier incorrecto de modelo OpenAI
 
-### 2. Logging & Observability
+### 2. Logging y observabilidad
 
-All operations must log to:
-- `./logs/rag.log` (local)
-- Azure Application Insights (remote)
+Todas las operaciones deben loguear en:
+- `./outputs/rag.log` (local)
+- Azure Application Insights (remoto)
 
-Capture:
-- Query input + response
-- Search latency + document count
-- Inference latency + tokens
-- Cost per operation
+Capturar:
+- Input de query + respuesta
+- Latencia de búsqueda + conteo de documentos
+- Latencia de inferencia + tokens
+- Coste por operación
 
-### 3. Error Handling
+### 3. Manejo de errores
 
-Every agent/script must:
-- Try setup steps with clear error messages
-- Suggest remediation ("Region quota full? Try westus2")
-- Never silently fail
-- Log all failures
+Cada agente/script debe:
+- Intentar pasos de configuración con mensajes de error claros
+- Sugerir remediación ("¿Cuota de región llena? Prueba westus2")
+- Nunca fallar en silencio
+- Loguear todos los fallos
 
-### 4. Environment Folder Organization
+### 4. Organización de carpetas
 
-**Users must organize docs BEFORE running wizard:**
+**Los usuarios deben organizar docs ANTES de ejecutar el wizard:**
 
 ```
 knowledge/
-â”œâ”€â”€ pdfs/               # PDFs (manuales, polÃ­ticas, guÃ­as, especificaciones)
-â”œâ”€â”€ procedimientos/     # Word (.docx), Excel (.xlsx), Markdown (.md) procedural docs
-â”œâ”€â”€ codigo/             # SQL, Python, JavaScript, configuration files (YAML, JSON)
-â””â”€â”€ presentaciones/     # PowerPoint (.pptx), diagramas, architecture docs
+├── pdfs/               # PDFs (manuales, políticas, guías, especificaciones)
+├── procedimientos/     # Word (.docx), Excel (.xlsx), Markdown (.md) docs procedimentales
+├── codigo/             # SQL, Python, JavaScript, ficheros de configuración (YAML, JSON)
+└── presentaciones/     # PowerPoint (.pptx), diagramas, docs de arquitectura
 ```
 
-**Agent Responsibility:** 
-- rag-onboarding.agent.md MUST check `knowledge/` folder exists with all 4 subdirs
-- If missing, CREATE them + GUIDE user to populate
-- If empty, WARN but continue (can be added later)
+**Responsabilidad del agente:** 
+- rag-onboarding.agent.md DEBE verificar que existe `knowledge/` con sus 4 subdirectorios
+- Si falta, CREARLOS + GUIAR al usuario a poblarlos
+- Si están vacíos, AVISAR pero continuar (se pueden añadir después)
 
-### 5. Wizard Automation Flow (FULLY AUTOMATIC)
+### 5. Flujo de automatización del wizard (TOTALMENTE AUTOMÁTICO)
 
-**rag-onboarding.agent.md MUST execute these phases with ZERO user intervention:**
+**rag-onboarding.agent.md DEBE ejecutar estas fases con CERO intervención del usuario:**
 
-#### Phase 1: Interview User (5 min)
+#### Fase 1: Entrevista al usuario (5 min)
 ```
-Ask ONLY these 5 questions (no more):
-1. Project name? (e.g., "rag-builder")
-2. Project description? (1-2 sentences)
-3. Total documentation size? (small: <1GB, medium: 1-10GB, large: >10GB)
-4. Monthly Azure budget? (default: $2,000)
-5. Preferred Azure region? (default: eastus)
-```
-
-#### Phase 2: Recommend Config (1 min - AUTOMATIC)
-```
-Based on doc size + budget:
-
-IF small (<1GB):
-  â”œâ”€ OpenAI: S0 (pay-per-token, ~$10/1K queries avg)
-  â”œâ”€ Search: Standard 1 replica ($200)
-  â””â”€ AppInsights: 30-day retention ($50)
-  â””â”€ TOTAL: $1,450/mo
-
-IF medium (1-10GB):
-  â”œâ”€ OpenAI: S0 (pay-per-token, ~$10/1K queries avg)
-  â”œâ”€ Search: Standard 2 replicas ($250)
-  â””â”€ AppInsights: 30-day retention ($50)
-  â””â”€ TOTAL: $1,500/mo
-
-IF large (>10GB):
-  â”œâ”€ OpenAI: S1 (4M tokens/mo, $2,400)
-  â”œâ”€ Search: Standard 3 replicas ($300)
-  â””â”€ AppInsights: 30-day retention ($50)
-  â””â”€ TOTAL: $2,750/mo
-
-ALWAYS show recommendation + ask user "OK to proceed?"
+Preguntar SOLO estas 5 preguntas (ni más):
+1. ¿Nombre del proyecto? (ej: "rag-builder")
+2. ¿Descripción del proyecto? (1-2 frases)
+3. ¿Tamaño total de documentación? (pequeño: <1GB, mediano: 1-10GB, grande: >10GB)
+4. ¿Presupuesto mensual en Azure? (por defecto: $2,000)
+5. ¿Región Azure preferida? (por defecto: eastus)
 ```
 
-#### Phase 3: Validate Costs (1 min - AUTOMATIC)
+#### Fase 2: Recomendar configuración (1 min - AUTOMÁTICO)
 ```
-Check:
-- User budget >= recommended config
-- Region has quota available (az vm list-skus)
-- Subscription has quota for OpenAI + Search
+Basado en tamaño de docs + presupuesto:
 
-IF over budget:
-  â””â”€ SUGGEST: "Try smaller config or request Azure quota increase"
-  â””â”€ ALLOW OVERRIDE: "Continue anyway? (Y/n)"
+SI pequeño (<1GB):
+  ├─ OpenAI: S0 (pago por token, ~$10/1K consultas promedio)
+  ├─ Search: Standard 1 réplica ($200)
+  └─ AppInsights: retención 30 días ($50)
+  └─ TOTAL: $1,450/mes
 
-IF quota issue:
-  â””â”€ SUGGEST: "Try region: westus2" or "Request quota increase"
-  â””â”€ BLOCK until resolved
-```
+SI mediano (1-10GB):
+  ├─ OpenAI: S0 (pago por token, ~$10/1K consultas promedio)
+  ├─ Search: Standard 2 réplicas ($250)
+  └─ AppInsights: retención 30 días ($50)
+  └─ TOTAL: $1,500/mes
 
-#### Phase 4: Deploy Infrastructure (10 min - AUTOMATIC)
-```
-Deploy using Bicep templates:
-1. Create Resource Group
-2. Deploy Azure OpenAI
-3. Deploy Azure AI Search
-4. Deploy Application Insights
+SI grande (>10GB):
+  ├─ OpenAI: S1 (4M tokens/mes, $2,400)
+  ├─ Search: Standard 3 réplicas ($300)
+  └─ AppInsights: retención 30 días ($50)
+  └─ TOTAL: $2,750/mes
 
-Show progress:
-  âœ… Resource Group created
-  âœ… OpenAI deployed (gpt-4o)
-  âœ… Search created (semantic search enabled)
-  âœ… AppInsights configured
-
-IF FAILURE:
-  â””â”€ Show error message
-  â””â”€ Suggest: "Check region quota" or "Try different region"
-  â””â”€ ALLOW RETRY with different region
+SIEMPRE mostrar recomendación + preguntar "¿Proceder?"
 ```
 
-#### Phase 5: Index Documents (10-15 min - AUTOMATIC)
+#### Fase 3: Validar costes (1 min - AUTOMÁTICO)
 ```
-Scan knowledge/ folder + process ALL files:
+Verificar:
+- Presupuesto del usuario >= configuración recomendada
+- La región tiene cuota disponible (az vm list-skus)
+- La suscripción tiene cuota para OpenAI + Search
 
-FOR EACH subdirectory:
-  â”œâ”€ knowledge/pdfs/          â†’ Extract text via OCR â†’ Chunks
-  â”œâ”€ knowledge/procedimientos/ â†’ Parse .docx/.xlsx/.md â†’ Chunks
-  â”œâ”€ knowledge/codigo/         â†’ Parse SQL/Python/JS â†’ Chunks
-  â””â”€ knowledge/presentaciones/ â†’ Extract text from PPT â†’ Chunks
+SI excede presupuesto:
+  └─ SUGERIR: "Prueba config más pequeña o solicita aumento de cuota Azure"
+  └─ PERMITIR OVERRIDE: "¿Continuar igualmente? (S/n)"
 
-THEN:
-  â”œâ”€ Generate embeddings via OpenAI (text-embedding-3-small)
-  â”œâ”€ Upload chunks to Azure Search
-  â””â”€ Enable semantic search indexing
-
-SHOW PROGRESS:
-  âœ… Processed 42 PDFs (1,200 chunks)
-  âœ… Processed 15 Word docs (350 chunks)
-  âœ… Processed 8 SQL files (400 chunks)
-  âœ… Processed 3 PPTs (180 chunks)
-  âœ… TOTAL: 2,130 chunks indexed
-
-IF ERRORS:
-  â””â”€ Log failed files
-  â””â”€ Continue with others (don't block)
-  â””â”€ Show: "Indexed 2,100/2,130 chunks. 30 files had errors. Check logs."
+SI problema de cuota:
+  └─ SUGERIR: "Prueba región: westus2" o "Solicita aumento de cuota"
+  └─ BLOQUEAR hasta resolver
 ```
 
-#### Phase 6: Setup Credentials (1 min - AUTOMATIC)
+#### Fase 4: Desplegar infraestructura (10 min - AUTOMÁTICO)
 ```
-Generate .env file with:
+Desplegar usando plantillas Bicep:
+1. Crear Grupo de Recursos
+2. Desplegar Azure OpenAI
+3. Desplegar Azure AI Search
+4. Desplegar Application Insights
+
+Mostrar progreso:
+  ✅ Grupo de Recursos creado
+  ✅ OpenAI desplegado (gpt-4o)
+  ✅ Search creado (búsqueda semántica habilitada)
+  ✅ AppInsights configurado
+
+SI FALLO:
+  └─ Mostrar mensaje de error
+  └─ Sugerir: "Verificar cuota de región" o "Probar otra región"
+  └─ PERMITIR REINTENTO con otra región
+```
+
+#### Fase 5: Indexar documentos (10-15 min - AUTOMÁTICO)
+```
+Escanear carpeta knowledge/ + procesar TODOS los ficheros:
+
+PARA CADA subdirectorio:
+  ├─ knowledge/pdfs/          → Extraer texto vía OCR → Chunks
+  ├─ knowledge/procedimientos/ → Parsear .docx/.xlsx/.md → Chunks
+  ├─ knowledge/codigo/         → Parsear SQL/Python/JS → Chunks
+  └─ knowledge/presentaciones/ → Extraer texto de PPT → Chunks
+
+LUEGO:
+  ├─ Generar embeddings vía OpenAI (text-embedding-3-small)
+  ├─ Subir chunks a Azure Search
+  └─ Habilitar indexación de búsqueda semántica
+
+MOSTRAR PROGRESO:
+  ✅ Procesados 42 PDFs (1,200 chunks)
+  ✅ Procesados 15 Word docs (350 chunks)
+  ✅ Procesados 8 ficheros SQL (400 chunks)
+  ✅ Procesados 3 PPTs (180 chunks)
+  ✅ TOTAL: 2,130 chunks indexados
+
+SI ERRORES:
+  └─ Loguear ficheros fallidos
+  └─ Continuar con los otros (no bloquear)
+  └─ Mostrar: "Indexados 2,100/2,130 chunks. 30 ficheros con errores. Ver logs."
+```
+
+#### Fase 6: Configurar credenciales (1 min - AUTOMÁTICO)
+```
+Generar fichero .env con:
   AZURE_OPENAI_ENDPOINT=...
   AZURE_OPENAI_API_KEY=...
   AZURE_SEARCH_ENDPOINT=...
@@ -180,129 +180,70 @@ Generate .env file with:
   SUBSCRIPTION_ID=...
   RESOURCE_GROUP=...
 
-SAVE to: .env (git-ignored)
+GUARDAR en: .env (en git-ignored)
 ```
 
-#### Phase 7: Test Connections (2 min - AUTOMATIC)
+#### Fase 7: Probar conexiones (2 min - AUTOMÁTICO)
 ```
-Verify all services working:
-  âœ… OpenAI connected (call /models endpoint)
-  âœ… Search connected (call /indexes endpoint)
-  âœ… AppInsights connected (send test event)
+Verificar todos los servicios funcionando:
+  ✅ OpenAI conectado (llamar endpoint /models)
+  ✅ Search conectado (llamar endpoint /indexes)
+  ✅ AppInsights conectado (enviar evento de test)
 
-IF ANY FAIL:
-  â””â”€ Show error: "OpenAI unreachable: check API key in .env"
-  â””â”€ OFFER RETRY
+SI ALGUNO FALLA:
+  └─ Mostrar error: "OpenAI no alcanzable: verificar API key en .env"
+  └─ OFRECER REINTENTO
 ```
 
-#### Phase 8: Ready! (1 min - AUTOMATIC)
+#### Fase 8: ¡Listo! (1 min - AUTOMÁTICO)
 ```
-Display usage instructions:
+Mostrar instrucciones de uso:
 
-ðŸ“š Your RAG is ready! Choose your mode:
+📚 ¡Tu RAG está listo! Elige tu modo:
 
-MODE A: Quick Queries (CLI)
-  $ python scripts/consulta/consultar.py "Â¿CuÃ¡l es X?"
-  Latency: 2s | Cost: $0.02/query
+MODO A: Consultas rápidas (CLI)
+  $ python .github/skills/rag-query-cli/consultar.py "¿Cuál es X?"
+  Latencia: 2s | Coste: $0.02/consulta
 
-MODE B: Chat Conversational
+MODO B: Chat conversacional
   $ copilot-cli run .github/agents/rag-chat.agent.md
-  Latency: 5s | Cost: $0.05/turn
+  Latencia: 5s | Coste: $0.05/turno
 
-MODE C: REST API (For Apps)
-  $ python scripts/consulta/servidor-api.py --port 8000
+MODO C: API REST (Para apps)
+  $ python .github/skills/rag-api-server/servidor-api.py --port 8000
   curl -X POST http://localhost:8000/query
-  Latency: 3s | Cost: $0.03/query
+  Latencia: 3s | Coste: $0.03/consulta
 
-ðŸ“– Read QUERY_MODES.md for detailed examples
+📖 Ver sección Inicio Rápido del README para ejemplos detallados
 
-Save setup summary to: outputs/setup-summary-{timestamp}.json
+Guardar resumen en: outputs/setup-summary-{timestamp}.json
 ```
 
-### 6. Error Handling & Resumption
+### 6. Manejo de errores y reanudación
 
-**Every agent phase must:**
-- Log step completion to: `outputs/wizard-checkpoint.json`
-- IF interrupted â†’ resume from last checkpoint
-- Example:
+**Cada fase del agente debe:**
+- Loguear completación de pasos en: `outputs/wizard-checkpoint.json`
+- SI se interrumpe → reanudar desde último checkpoint
+- Ejemplo:
   ```json
   {
     "phase": 4,
     "status": "completed",
     "timestamp": "2026-05-13T10:30:00Z",
-    "next": "Phase 5: Index Documents"
+    "next": "Fase 5: Indexar Documentos"
   }
   ```
 
-**If user restarts wizard:**
+**Si el usuario reinicia el wizard:**
 ```
-Detected incomplete setup.
-Continue from Phase 5: Index Documents? (Y/n)
-```
-
-### 7. Configuration
-
-All config through `.env`:
-- No hardcoded endpoints/keys
-- Clear variable names
-- Comments explaining each setting
-- Validation on startup (`validate_setup.py`)
-
----
-
-## Typical Error Resolution
-
-### "Invalid OpenAI endpoint"
-â†’ Check `AZURE_OPENAI_ENDPOINT` in `.env`
-â†’ Run: `az cognitiveservices account show --resource-group rag-builder-rg --name your-openai`
-
-### "Search index not found"
-â†’ Index hasn't been created yet
-â†’ Run: `copilot-cli run .github/agents/rag-indexer-specialist.agent.md`
-
-### "Quota exceeded for model deployment"
-â†’ Region overbooked
-â†’ Change `AZURE_REGION` in `.env` to different region (westus2, northeurope)
-â†’ Re-run setup agent
-
-### "High search latency"
-â†’ Check `AZURE_SEARCH_REPLICAS` (should be 2+ for prod)
-â†’ Monitor: `app-insights-query.kql` (see queries below)
-
----
-
-## Monitoring KQL Queries
-
-Use these in Application Insights to track RAG health:
-
-### Query Latency
-```kusto
-customMetrics
-| where name == "rag_query_latency_ms"
-| summarize P50=percentile(value, 50), P95=percentile(value, 95), P99=percentile(value, 99) by bin(timestamp, 5m)
+Detectada configuración incompleta.
+¿Continuar desde Fase 5: Indexar Documentos? (S/n)
 ```
 
-### Cost Tracking
-```kusto
-customMetrics
-| where name == "cost_per_query_usd"
-| summarize total_cost=sum(value), query_count=count() by tostring(customDimensions.operation)
-```
+### 7. Configuración
 
-### Index Health
-```kusto
-customMetrics
-| where name == "search_document_count"
-| summarize latest=max_by(value, timestamp) by tostring(customDimensions.index_name)
-```
-
----
-
-## Next Steps
-
-1. Copy `.env.example` to `.env`
-2. Fill in Azure credentials (see setup agents)
-3. Run `python scripts/validate_setup.py --verbose`
-4. Follow prompts to deploy
-5. Test with: `python scripts/consulta/consultar.py "Test query"`
-
+Toda la config a través de `.env`:
+- Sin endpoints/claves hardcodeados
+- Nombres de variables claros
+- Comentarios explicando cada ajuste
+- Validación al arrancar (`validate_setup.py`)

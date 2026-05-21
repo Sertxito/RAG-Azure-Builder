@@ -75,9 +75,13 @@ Azure Search:      Standard (15M docs, 10 partitions, 12 replicas)
 Log Analytics:     1 año retención
 App Insights:      1 año retención
 OpenAI:            S0
-Storage:           Standard GRS (replicación geográfica)
+Storage:           Standard ZRS (redundancia zonal)
 Budget Alert:      €250/mes
 ```
+> **¿Por qué ZRS y no GRS?** Azure AI Search no soporta geo-replicación nativa.
+> GRS protegería los docs en otra región, pero el índice (Search) seguiría
+> siendo single-region. ZRS protege contra fallo de zona dentro de la región,
+> que es el escenario real de DR para RAG.
 **Ideal para:** Producción crítica, múltiples índices, alta disponibilidad
 
 ## Flujo de Uso Recomendado

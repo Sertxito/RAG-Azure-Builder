@@ -3,82 +3,82 @@
 
 
 
-**Purpose:** Validate costs and architecture BEFORE deploying. Prevents budget surprises.
+**Propósito:** Validar costes y arquitectura ANTES de desplegar. Previene sorpresas de presupuesto.
 
-**User Entry:** `copilot-cli run .github/agents/rag-validate-deployment.agent.md`
+**Entrada del usuario:** `copilot-cli run .github/agents/rag-validate-deployment.agent.md`
 
-**Expected Duration:** ~2 minutes
-
----
-
-## What This Agent Does
-
-Validates setup will fit user's budget + Azure constraints BEFORE any deployment happens.
+**Duración estimada:** ~2 minutos
 
 ---
 
-## âœ… Validation Checklist
+## Qué hace este agente
 
-- [ ] Ask user for: doc size, budget, region
-- [ ] Look up current Azure quotas in region
-- [ ] Calculate infrastructure costs
-- [ ] Compare vs budget
-- [ ] Show detailed cost breakdown
-- [ ] WARN if over-provisioned
-- [ ] ALLOW to proceed or adjust
+Valida que la configuración se ajuste al presupuesto del usuario + restricciones de Azure ANTES de cualquier despliegue.
 
 ---
 
-## Step-by-Step
+## ✅ Lista de verificación de validación
 
-### Step 1: Get User Input (1 min)
+- [ ] Preguntar al usuario: tamaño de docs, presupuesto, región
+- [ ] Consultar cuotas actuales de Azure en la región
+- [ ] Calcular costes de infraestructura
+- [ ] Comparar con presupuesto
+- [ ] Mostrar desglose detallado de costes
+- [ ] AVISAR si está sobredimensionado
+- [ ] PERMITIR continuar o ajustar
+
+---
+
+## Paso a paso
+
+### Paso 1: Obtener información del usuario (1 min)
 
 ```
-Ask (again if needed):
-  1. Documentation size? (small/medium/large)
-  2. Monthly budget? (USD, default: $2,000)
-  3. Azure region? (default: eastus)
-  4. Do you need high availability? (Y/n, default: n)
+Preguntar (de nuevo si es necesario):
+  1. ¿Tamaño de documentación? (pequeño/mediano/grande)
+  2. ¿Presupuesto mensual? (USD, por defecto: $2,000)
+  3. ¿Región Azure? (por defecto: eastus)
+  4. ¿Necesitas alta disponibilidad? (S/n, por defecto: n)
 ```
 
-### Step 2: Recommend Tiers (30 sec - AUTO)
+### Paso 2: Recomendar tiers (30 seg - AUTO)
 
 ```python
 configurations = {
-    ("small", False): {  # small docs, no HA
+    ("small", False): {  # docs pequeños, sin HA
         "openai": ("S0", 1200),
-        "search": ("Standard 1 replica", 200),
-        "appinsights": ("30 days", 50),
+        "search": ("Standard 1 réplica", 200),
+        "appinsights": ("30 días", 50),
         "total": 1450
     },
-    ("small", True): {   # small docs, HA
+    ("small", True): {   # docs pequeños, con HA
         "openai": ("S0", 1200),
-        "search": ("Standard 2 replicas", 250),
-        "appinsights": ("90 days", 100),
+        "search": ("Standard 2 réplicas", 250),
+        "appinsights": ("90 días", 100),
         "total": 1550
     },
     ("medium", False): {
         "openai": ("S0", 1200),
-        "search": ("Standard 2 replicas", 250),
-        "appinsights": ("30 days", 50),
+        "search": ("Standard 2 réplicas", 250),
+        "appinsights": ("30 días", 50),
         "total": 1500
     },
     ("medium", True): {
         "openai": ("S0", 1200),
-        "search": ("Standard 3 replicas", 300),
-        "appinsights": ("90 days", 100),
+        "search": ("Standard 3 réplicas", 300),
+        "appinsights": ("90 días", 100),
         "total": 1600
     },
     ("large", False): {
         "openai": ("S1", 2400),
-        "search": ("Standard 3 replicas", 300),
-        "appinsights": ("30 days", 50),
+        "search": ("Standard 3 réplicas", 300),
+        "appinsights": ("30 días", 50),
         "total": 2750
     },
     ("large", True): {
         "openai": ("S1", 2400),
-        "search": ("Standard 3 replicas", 300),
-        "appinsights": ("90 days", 100),
+        "search": ("Standard 3 réplicas", 300),
+        "appinsights": ("90 días", 100),
         "total": 2800
     }
 }
@@ -86,107 +86,101 @@ configurations = {
 config = configurations[(doc_size, ha_needed)]
 ```
 
-### Step 3: Check Azure Quotas (1 min - AUTO)
+### Paso 3: Verificar cuotas de Azure (1 min - AUTO)
 
 ```bash
-
-
-
 az vm list-skus \
   --location "${REGION}" \
   --query "[?family=='StandardSv5'].capabilities[?name=='vCPUs'].value" \
   --output json
-
-
-
 
 az cognitiveservices account list \
   --query "[?location=='${REGION}'].kind" \
   --output json
 ```
 
-**If quota issue:**
+**Si hay problema de cuota:**
 ```
-âš ï¸  Region {region} has limited quota for OpenAI.
+⚠️  La región {region} tiene cuota limitada para OpenAI.
 
-Available alternatives:
-  â€¢ westus2 (quota: unlimited)
-  â€¢ northeurope (quota: unlimited)
-  â€¢ southeastasia (quota: 2 units)
+Alternativas disponibles:
+  • westus2 (cuota: ilimitada)
+  • northeurope (cuota: ilimitada)
+  • southeastasia (cuota: 2 unidades)
 
-Try different region? (Y/n)
-```
-
-### Step 4: Cost Breakdown (30 sec)
-
-```
-ðŸ“Š COST ANALYSIS
-
-Configuration: {doc_size.upper()} | High Availability: {ha}
-
-Service Costs (Monthly):
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ Azure OpenAI: {openai_tier}           â”‚
-â”‚   â€¢ Model: gpt-4o                  â”‚
-â”‚   â€¢ Tokens: {tokens}/month              â”‚
-â”‚   â€¢ Cost: ${openai_cost}/mo              â”‚
-â”‚                                         â”‚
-â”‚ Azure AI Search: {search_tier}         â”‚
-â”‚   â€¢ Tier: Standard                      â”‚
-â”‚   â€¢ Replicas: {replicas}                â”‚
-â”‚   â€¢ Cost: ${search_cost}/mo              â”‚
-â”‚                                         â”‚
-â”‚ Application Insights: {ai_retention}  â”‚
-â”‚   â€¢ Retention: {retention} days          â”‚
-â”‚   â€¢ Cost: ${ai_cost}/mo                  â”‚
-â”‚                                         â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚ TOTAL MONTHLY: ${total}/mo               â”‚
-â”‚ Annual: ${total * 12}                    â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-
-Your Budget: ${user_budget}/mo
-Difference: ${difference:+f"${difference} under budget" if difference > 0 else f"${abs(difference)} OVER budget"}
-Status: {"âœ… FITS BUDGET" if total <= user_budget else "âš ï¸ EXCEEDS BUDGET"}
+¿Probar otra región? (S/n)
 ```
 
-### Step 5: Validation Result (30 sec)
+### Paso 4: Desglose de costes (30 seg)
 
 ```
-IF total_cost <= user_budget:
-  âœ… Validation PASSED
-  
-  Your infrastructure fits your budget.
-  Ready to deploy? (Y/n)
+📊 ANÁLISIS DE COSTES
 
-ELSE IF total_cost <= user_budget * 1.1:  # Within 10%
-  âš ï¸ Validation YELLOW
-  
-  Configuration is ${difference} over budget (${percent}%).
-  
-  Options:
-    A) Proceed anyway (slight overage)
-    B) Reduce to smaller tier
-    C) Cancel
-  
-  Your choice? (A/B/C)
+Configuración: {doc_size.upper()} | Alta Disponibilidad: {ha}
 
-ELSE:  # Way over budget
-  âŒ Validation FAILED
-  
-  Configuration costs ${difference} more than budget.
-  This is ${percent}% over.
-  
-  To fit budget, you need ONE of:
-    â€¢ Reduce doc size (move cold docs to archive)
-    â€¢ Increase budget to ${total}
-    â€¢ Use smaller Azure region
-    â€¢ Reduce high availability (use 1 replica)
-  
-  Retry with different params? (Y/n)
+Costes de servicios (mensual):
+┌─────────────────────────────────────────┐
+│ Azure OpenAI: {openai_tier}           │
+│   • Modelo: gpt-4o                  │
+│   • Tokens: {tokens}/mes              │
+│   • Coste: ${openai_cost}/mes              │
+│                                         │
+│ Azure AI Search: {search_tier}         │
+│   • Tier: Standard                      │
+│   • Réplicas: {replicas}                │
+│   • Coste: ${search_cost}/mes              │
+│                                         │
+│ Application Insights: {ai_retention}  │
+│   • Retención: {retention} días          │
+│   • Coste: ${ai_cost}/mes                  │
+│                                         │
+├─────────────────────────────────────────┤
+│ TOTAL MENSUAL: ${total}/mes               │
+│ Anual: ${total * 12}                    │
+└─────────────────────────────────────────┘
+
+Tu presupuesto: ${user_budget}/mes
+Diferencia: ${difference}
+Estado: {"✅ DENTRO DEL PRESUPUESTO" if total <= user_budget else "⚠️ EXCEDE PRESUPUESTO"}
 ```
 
-### Step 6: Save Report
+### Paso 5: Resultado de validación (30 seg)
+
+```
+SI total_cost <= user_budget:
+  ✅ Validación APROBADA
+  
+  Tu infraestructura se ajusta al presupuesto.
+  ¿Listo para desplegar? (S/n)
+
+SI NO SI total_cost <= user_budget * 1.1:  # Dentro del 10%
+  ⚠️ Validación AMARILLA
+  
+  La configuración excede el presupuesto en ${difference} (${percent}%).
+  
+  Opciones:
+    A) Continuar igualmente (ligero exceso)
+    B) Reducir a tier más pequeño
+    C) Cancelar
+  
+  ¿Tu elección? (A/B/C)
+
+SI NO:  # Muy por encima del presupuesto
+  ❌ Validación FALLIDA
+  
+  La configuración cuesta ${difference} más que el presupuesto.
+  Esto es un ${percent}% por encima.
+  
+  Para ajustarse al presupuesto, necesitas UNA de:
+    • Reducir tamaño de docs (mover docs fríos a archivo)
+    • Aumentar presupuesto a ${total}
+    • Usar región Azure más pequeña
+    • Reducir alta disponibilidad (usar 1 réplica)
+  
+  ¿Reintentar con otros parámetros? (S/n)
+```
+
+### Paso 6: Guardar informe
 
 ```python
 report = {
@@ -197,11 +191,11 @@ report = {
     "region": "eastus",
     "configuration": {
         "openai": {"tier": "S0", "cost": 1200},
-        "search": {"tier": "Standard 1 replica", "cost": 200},
-        "appinsights": {"retention": "30 days", "cost": 50}
+        "search": {"tier": "Standard 1 réplica", "cost": 200},
+        "appinsights": {"retention": "30 días", "cost": 50}
     },
     "total_cost": 1450,
-    "status": "PASSED",
+    "status": "APROBADA",
     "quota_checks": {
         "region": "OK",
         "openai": "OK",
@@ -209,88 +203,85 @@ report = {
     }
 }
 
-
-
 with open(f"outputs/validation-report-{timestamp}.json", "w") as f:
     json.dump(report, f, indent=2)
 
-print(f"âœ… Report saved to outputs/validation-report-{timestamp}.json")
+print(f"✅ Informe guardado en outputs/validation-report-{timestamp}.json")
 ```
 
 ---
 
-## Error Scenarios
+## Escenarios de error
 
-### Over Budget
+### Excede presupuesto
 ```
-âŒ Configuration ($2,750/mo) exceeds budget ($2,000/mo)
+❌ La configuración ($2,750/mes) excede el presupuesto ($2,000/mes)
 
-To fit budget, try:
-  1. Mark some docs as "archive" (lower tier)
-  2. Reduce replicas: 3 â†’ 2 (saves $50)
-  3. Use 30-day retention (save $50)
+Para ajustar al presupuesto, prueba:
+  1. Marcar algunos docs como "archivo" (tier inferior)
+  2. Reducir réplicas: 3 → 2 (ahorra $50)
+  3. Usar retención de 30 días (ahorra $50)
 
-New estimate: $2,650 (-$100)
-Still over. Proceed anyway? (Y/n)
-```
-
-### Region Quota Full
-```
-âš ï¸ Region eastus is at quota for OpenAI S0.
-
-Alternatives:
-  â€¢ westus2: âœ… Available (quota: 10 units)
-  â€¢ northeurope: âœ… Available (quota: 5 units)
-  â€¢ southeastasia: âš ï¸  Limited (quota: 2 units)
-
-Use westus2 instead? (Y/n)
+Nueva estimación: $2,650 (-$100)
+Sigue por encima. ¿Continuar igualmente? (S/n)
 ```
 
-### Model Unavailable
+### Cuota de región llena
 ```
-âš ï¸ gpt-4o model not yet available in region southeastasia.
+⚠️ La región eastus está al límite de cuota para OpenAI S0.
 
-Recommendations:
-  1. Try different region (see above)
-  2. Use gpt-4-turbo as fallback (same cost)
-  3. Wait for model availability (check Azure news)
+Alternativas:
+  • westus2: ✅ Disponible (cuota: 10 unidades)
+  • northeurope: ✅ Disponible (cuota: 5 unidades)
+  • southeastasia: ⚠️  Limitada (cuota: 2 unidades)
 
-Your choice? (1/2/3)
-```
-
----
-
-## Integration with Wizard
-
-After validation PASSES, wizard can proceed:
-
-```
-âœ… Validation PASSED
-
-Ready to deploy infrastructure? (Y/n)
-â†’ Calls: rag-azure-setup.agent.md
+¿Usar westus2 en su lugar? (S/n)
 ```
 
-If validation FAILS, stop:
-
+### Modelo no disponible
 ```
-âŒ Validation FAILED
+⚠️ El modelo gpt-4o aún no está disponible en la región southeastasia.
 
-Cannot proceed to deployment.
-Fix issues above and try again.
+Recomendaciones:
+  1. Probar otra región (ver arriba)
+  2. Usar gpt-4-turbo como fallback (mismo coste)
+  3. Esperar disponibilidad del modelo (consultar novedades Azure)
 
-Exit.
+¿Tu elección? (1/2/3)
 ```
 
 ---
 
-## Success Criteria
+## Integración con el wizard
 
-âœ… User sees clear cost breakdown
+Después de que la validación PASE, el wizard puede continuar:
 
-âœ… Quota issues identified BEFORE deployment
+```
+✅ Validación APROBADA
 
-âœ… User can decide: proceed or adjust
+¿Listo para desplegar infraestructura? (S/n)
+→ Llama a: rag-azure-setup.agent.md
+```
 
-âœ… No surprises later
+Si la validación FALLA, detener:
 
+```
+❌ Validación FALLIDA
+
+No se puede proceder con el despliegue.
+Corrige los problemas anteriores e inténtalo de nuevo.
+
+Salir.
+```
+
+---
+
+## Criterios de éxito
+
+✅ El usuario ve un desglose claro de costes
+
+✅ Problemas de cuota identificados ANTES del despliegue
+
+✅ El usuario puede decidir: continuar o ajustar
+
+✅ Sin sorpresas después

@@ -1,31 +1,29 @@
-﻿---
+---
 name: 'rag-agent-instrumentation'
-description: 'Reusable Python modules for instrumenting agents: metrics collection, Application Insights integration, logging with observability. Used by all agents to capture tokens, latency, cost, errors.'
+description: 'Módulos Python reutilizables para instrumentar agentes: recolección de métricas, integración con Application Insights, logging con observabilidad. Usado por todos los agentes para capturar tokens, latencia, coste, errores.'
 ---
 
 **RAG Reference:** [Retrieval-augmented Generation (RAG) in Azure AI Search - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview?tabs=videos)
 
+**Assets incluidos**: `instrumentation.py`, `metrics_collector.py`
 
+## Propósito
 
+Proporcionar utilidades Python reutilizables para instrumentar cualquier agente con:
+- Seguimiento de consumo de tokens
+- Medición de latencia
+- Cálculo de coste
+- Integración con Application Insights
+- Logging estructurado
 
+## Uso
 
-**Bundled assets**: `instrumentation.py`, `metrics_collector.py`
-
-## Purpose
-
-Provide reusable Python utilities for instrumenting any agent with:
-- Token consumption tracking
-- Latency measurement
-- Cost calculation
-- Application Insights integration
-- Structured logging
-
-## Usage
-
-Import in any agent or script:
+Importar en cualquier agente o script:
 
 ```python
-from agent_instrumentation import MetricsCollector, instrument_call
+import sys
+sys.path.insert(0, ".github/skills/rag-agent-instrumentation")
+from instrumentation import MetricsCollector, instrument_call
 
 collector = MetricsCollector(
     app_insights_key=os.getenv("APP_INSIGHTS_CONNECTION_STRING")
@@ -33,18 +31,18 @@ collector = MetricsCollector(
 
 @instrument_call(collector, "my_agent")
 def my_agent_function():
-    # Automatically captures timing, tokens, errors
+    # Captura automáticamente timing, tokens, errores
     pass
 ```
 
-## Exported functions
+## Funciones Exportadas
 
-- `MetricsCollector` â€” Main class for collecting metrics
-- `instrument_call()` â€” Decorator for auto-instrumentation
-- `calculate_token_cost()` â€” Pricing calculator by model
-- `log_to_app_insights()` â€” Send custom events
+- `MetricsCollector` — Clase principal para recolectar métricas
+- `instrument_call()` — Decorador para auto-instrumentación
+- `calculate_token_cost()` — Calculador de precios por modelo
+- `log_to_app_insights()` — Enviar eventos personalizados
 
-## Used by
+## Usado por
 
 - `rag-onboarding.agent.md`
 - `rag-validate-deployment.agent.md`
@@ -52,5 +50,4 @@ def my_agent_function():
 - `rag-indexer-specialist.agent.md`
 - `rag-chat.agent.md`
 - `rag-clone-new-project.agent.md`
-- Any custom agent that needs observability
-
+- Cualquier agente personalizado que necesite observabilidad

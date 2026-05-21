@@ -1,19 +1,19 @@
 ---
-description: 'RAG setup standards for observability, error handling, and logging consistency across agents and scripts.'
+description: 'Estándares de configuración RAG para observabilidad, manejo de errores y consistencia de logging en agentes y scripts.'
 applyTo: '**/*.py, **/*.agent.md'
 ---
 
 **RAG Reference:** [Retrieval-augmented Generation (RAG) in Azure AI Search - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview?tabs=videos)
 
-# Instruction: RAG Setup Standards
+# Instrucción: Estándares de Configuración RAG
 
 
 
 
 
-## Observability Requirements
+## Requisitos de observabilidad
 
-All agents and scripts MUST:
+Todos los agentes y scripts DEBEN:
 
 ### 1. Logging
 
@@ -23,110 +23,99 @@ logger = logging.getLogger(__name__)
 
 
 
-logger.debug("Detailed execution info")        # Dev troubleshooting
-logger.info("Step completed")                  # Normal progress
-logger.warning("Potential issue")              # Non-blocking
-logger.error("Operation failed, may recover") # Recoverable
+logger.debug("Información detallada de ejecución")   # Troubleshooting dev
+logger.info("Paso completado")                       # Progreso normal
+logger.warning("Problema potencial")                 # No bloqueante
+logger.error("Operación fallida, puede recuperarse") # Recuperable
 ```
 
-### 2. Metrics Collection
+### 2. Recolección de métricas
 
-Use `MetricsCollector` from rag-rag-rag-agent-instrumentation skill:
+Usar `MetricsCollector` del skill rag-agent-instrumentation:
 
 ```python
-from agent_instrumentation import MetricsCollector, instrument_call
+import sys
+sys.path.insert(0, ".github/skills/rag-agent-instrumentation")
+from instrumentation import MetricsCollector, instrument_call
 
 collector = MetricsCollector(app_insights_key=os.getenv("APP_INSIGHTS_CONNECTION_STRING"))
 
 @instrument_call(collector, "my_agent")
 def my_function():
     pass
-
-
-
-
-
-
-
-
-
-
-
 ```
 
-### 3. Error Handling
+### 3. Manejo de errores
 
 ```python
 try:
-    # Operation
+    # Operación
     pass
 except TimeoutError:
-    logger.error("Operation timed out", extra={"timeout_seconds": 30})
-    # Retry with backoff
+    logger.error("Operación timeout", extra={"timeout_seconds": 30})
+    # Reintentar con backoff
 except ValueError as e:
-    logger.warning(f"Invalid input: {e}")
-    # Use default or fallback
+    logger.warning(f"Entrada inválida: {e}")
+    # Usar valor por defecto o fallback
 except Exception as e:
-    logger.error(f"Unexpected error: {e}", exc_info=True)
-    # Re-raise after logging full context
+    logger.error(f"Error inesperado: {e}", exc_info=True)
+    # Re-raise después de loguear contexto completo
     raise
 ```
 
-### 4. Structured Logging
+### 4. Logging estructurado
 
 ```python
-
-
-logger.info("Agent executed", extra={
+# ✅ Correcto — logging estructurado
+logger.info("Agente ejecutado", extra={
     "agent": "summary",
     "tokens_in": 1050,
     "latency_ms": 2100,
     "model": "gpt-4o"
 })
 
-
-
-logger.info(f"Agent summary ran in {latency_ms}ms")  # Bad
+# ❌ Incorrecto — string interpolation
+logger.info(f"Agente summary ejecutado en {latency_ms}ms")
 ```
 
-## Code Standards
+## Estándares de código
 
-### Python Scripts
+### Scripts Python
 
-- Use type hints: `def execute(query: str, context: str) -> Dict[str, Any]`
-- Docstrings for all functions
-- Class names: `PascalCase` (e.g., `MonolithicAgent`)
-- Function names: `snake_case` (e.g., `execute_agent`)
-- Constants: `UPPER_CASE` (e.g., `MAX_RETRIES`)
+- Usar type hints: `def execute(query: str, context: str) -> Dict[str, Any]`
+- Docstrings para todas las funciones
+- Nombres de clases: `PascalCase` (ej: `MonolithicAgent`)
+- Nombres de funciones: `snake_case` (ej: `execute_agent`)
+- Constantes: `UPPER_CASE` (ej: `MAX_RETRIES`)
 
-### Agent Markdown (.agent.md)
+### Agentes Markdown (.agent.md)
 
-- Include YAML frontmatter with: `name`, `description`, `model`, `tools`
-- Clear "When to use" section
-- Step-by-step workflow with timing estimates
-- Error handling table
-- Expected outputs documented
+- Incluir frontmatter YAML con: `name`, `description`, `model`, `tools`
+- Sección clara de "Cuándo usar"
+- Workflow paso a paso con estimaciones de tiempo
+- Tabla de manejo de errores
+- Salidas esperadas documentadas
 
 ## Testing
 
-- All agents: test with `--verbose` flag
-- All scripts: include `--validate` precheck
-- RAG dry-runs: execute 3x to validate stability (< 20% variation)
+- Todos los agentes: testear con flag `--verbose`
+- Todos los scripts: incluir precheck `--validate`
+- Dry-runs RAG: ejecutar 3x para validar estabilidad (< 20% variación)
 
-## Deployment Checklist
+## Lista de verificación de despliegue
 
-Before running RAG workflows:
+Antes de ejecutar workflows RAG:
 
-- [ ] `.env` configured with all Azure credentials
-- [ ] Azure resources deployed (run `azure-setup-specialist`)
-- [ ] RAG index created (run `rag-indexer-specialist`)
-- [ ] Validation passed: `python scripts/validate_setup.py --verbose`
-- [ ] All metrics output paths exist: `outputs/`
-- [ ] Logs file configured: `outputs/rag.log`
+- [ ] `.env` configurado con todas las credenciales Azure
+- [ ] Recursos Azure desplegados (ejecutar `azure-setup-specialist`)
+- [ ] Índice RAG creado (ejecutar `rag-indexer-specialist`)
+- [ ] Validación pasada: `python .github/skills/rag-diagnostics/validate_setup.py --verbose`
+- [ ] Todas las rutas de salida de métricas existen: `outputs/`
+- [ ] Fichero de logs configurado: `outputs/rag.log`
 
-## Output Format
+## Formato de salida
 
-All agents must generate JSON or structured output in `outputs/`:
+Todos los agentes deben generar JSON o salida estructurada en `outputs/`:
 
 ```json
 {
@@ -145,6 +134,5 @@ All agents must generate JSON or structured output in `outputs/`:
 
 ---
 
-**Applies to**: All `.py` scripts and `.agent.md` files
-**Enforced by**: rag-onboarding.agent.md and rag-clone-new-project.agent.md
-
+**Aplica a**: Todos los scripts `.py` y ficheros `.agent.md`
+**Aplicado por**: rag-onboarding.agent.md y rag-clone-new-project.agent.md

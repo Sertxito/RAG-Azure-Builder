@@ -1,48 +1,48 @@
-# RAG API Server — REST Interface
+# RAG API Server — Interfaz REST
 
-**Expose RAG as REST API for external applications.**
+**Expone RAG como API REST para aplicaciones externas.**
 
-## Overview
+## Descripción General
 
-REST API server wrapping RAG query functionality, allowing HTTP clients to search and query documents.
+Servidor API REST que envuelve la funcionalidad de consulta RAG, permitiendo a clientes HTTP buscar y consultar documentos.
 
-## Features
+## Características
 
-- ✅ REST API endpoints
-- ✅ JSON request/response
-- ✅ Async query processing
-- ✅ Metrics and monitoring
-- ✅ CORS support
+- REST API endpoints
+- Request/response JSON
+- Procesamiento async de queries
+- Métricas y monitorización
+- Soporte CORS
 
-## Requirements
+## Requisitos
 
 ```bash
 pip install -r .github/requirements.txt
 ```
 
-- `.env` with Azure credentials:
+- `.env` con credenciales Azure:
   - `AZURE_OPENAI_KEY`
   - `AZURE_OPENAI_ENDPOINT`
   - `AZURE_SEARCH_ENDPOINT`
   - `AZURE_SEARCH_KEY`
   - `AZURE_SEARCH_INDEX`
 
-## Usage
+## Uso
 
-### Start Server
+### Iniciar Servidor
 
 ```bash
-# From project root
+# Desde la raíz del proyecto
 python .github/skills/rag-api-server/servidor-api.py
 ```
 
-### Default Port
+### Puerto por Defecto
 
-Server runs on `http://localhost:8000`
+El servidor corre en `http://localhost:8000`
 
-### API Endpoints
+### Endpoints API
 
-#### POST `/query` — Execute RAG Query
+#### POST `/query` — Ejecutar Consulta RAG
 
 **Request:**
 ```json
@@ -81,7 +81,7 @@ Server runs on `http://localhost:8000`
 }
 ```
 
-## Example Clients
+## Clientes de Ejemplo
 
 ### cURL
 
@@ -119,51 +119,3 @@ fetch('http://localhost:8000/query', {
 .then(r => r.json())
 .then(data => console.log(data.response))
 ```
-
-## Deployment
-
-### Local Development
-
-```bash
-python .github/skills/rag-api-server/servidor-api.py
-```
-
-### Production (with Gunicorn)
-
-```bash
-pip install gunicorn
-gunicorn --workers 4 --bind 0.0.0.0:8000 servidor-api:app
-```
-
-### Docker
-
-```dockerfile
-FROM python:3.10
-WORKDIR /app
-COPY .github/requirements.txt .
-RUN pip install -r requirements.txt
-COPY .github/skills/rag-api-server ./server
-COPY .env .
-EXPOSE 8000
-CMD ["python", "server/servidor-api.py"]
-```
-
-## Configuration
-
-Via environment variables:
-
-```bash
-export API_PORT=8000
-export API_HOST=0.0.0.0
-python .github/skills/rag-api-server/servidor-api.py
-```
-
-## Related Skills
-
-- [`rag-query-cli`](../rag-query-cli/SKILL.md) — CLI alternative
-- [`rag-indexer`](../rag-indexer/SKILL.md) — Document indexing
-- [`rag-diagnostics`](../rag-diagnostics/SKILL.md) — System monitoring
-
-## See Also
-
-- [.github/README.md](../../README.md) — Architecture

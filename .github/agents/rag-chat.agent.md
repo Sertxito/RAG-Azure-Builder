@@ -1,6 +1,6 @@
-﻿---
+---
 name: 'RAG: Chat Conversacional'
-description: 'Interactive multi-turn RAG chat. Maintains context, reformulates questions, allows follow-ups. For conversational document exploration.'
+description: 'Chat RAG multi-turno conversacional. Mantiene contexto, reformula preguntas, permite seguimiento. Para exploración conversacional de documentos.'
 model: 'claude-opus-4.7'
 tools: true
 skills: ['rag-agent-instrumentation']
@@ -8,26 +8,22 @@ skills: ['rag-agent-instrumentation']
 
 **RAG Reference:** [Retrieval-augmented Generation (RAG) in Azure AI Search - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview?tabs=videos)
 
+## Propósito
 
+**Chat RAG multi-turno** con memoria de contexto. Perfecto para:
 
+- Conversaciones largas sobre documentación
+- Preguntas de seguimiento ("¿Por qué?" -> "¿Cómo cambio?")
+- Exploración iterativa de temas
+- Reformulación de preguntas complejas
 
-
-## Purpose
-
-**Multi-turno RAG chat** con memoria de contexto. Perfecto para:
-
-âœ… Conversaciones largas sobre documentaciÃ³n  
-âœ… Preguntas de seguimiento ("Â¿Por quÃ©?" â†’ "Â¿CÃ³mo cambio?")  
-âœ… ExploraciÃ³n iterativa de temas  
-âœ… ReformulaciÃ³n de preguntas complejas  
-
-## When to use
+## Cuándo usar
 
 ```
 copilot-cli run .github/agents/rag-chat.agent.md
 ```
 
-Ãšsalo cuando necesites:
+Úsalo cuando necesites:
 - Conversar vs hacer queries puntuales
 - Razonamiento multi-paso
 - Contexto persistente entre preguntas
@@ -38,69 +34,69 @@ copilot-cli run .github/agents/rag-chat.agent.md
 
 ```
 System: Inicializando RAG Chat...
-âœ… Conectado a Azure Search
-âœ… Conectado a Azure OpenAI
-âœ… Ãndice: rag-builder-index
+✅ Conectado a Azure Search
+✅ Conectado a Azure OpenAI
+✅ Índice: rag-builder-index
 
-Eres un asistente de documentaciÃ³n. AyudarÃ¡s a usuarios a explorar
-polÃ­ticas, procedimientos, y documentaciÃ³n corporativa mediante bÃºsqueda
-semÃ¡ntica. MantÃ©n conversaciÃ³n natural, reformula preguntas complejas,
+Eres un asistente de documentación. Ayudarás a usuarios a explorar
+políticas, procedimientos, y documentación corporativa mediante búsqueda
+semántica. Mantén conversación natural, reformula preguntas complejas,
 y sugiere temas relacionados.
 
 Escribe tu pregunta (o 'exit' para salir):
 ```
 
-### 2. ConversaciÃ³n Multi-Turno
+### 2. Conversación Multi-Turno
 
 **User:**
 ```
-Â¿CuÃ¡l es la polÃ­tica de retenciÃ³n de datos?
+¿Cuál es la política de retención de datos?
 ```
 
 **Assistant:**
 ```
-Basado en la documentaciÃ³n, la polÃ­tica de retenciÃ³n es:
+Basado en la documentación, la política de retención es:
 
-ðŸ“‹ PolÃ­tica de RetenciÃ³n de Datos (Encontrado en: retention-policy.pdf)
+📋 Política de Retención de Datos (Encontrado en: retention-policy.pdf)
 
-- **Datos personales**: 3 aÃ±os despuÃ©s del Ãºltimo acceso
-- **Logs de auditorÃ­a**: 7 aÃ±os
-- **Backups**: 30 dÃ­as de retenciÃ³n (con 2 copias)
-- **GDPR compliance**: EliminaciÃ³n segura con certificado
+- **Datos personales**: 3 años después del último acceso
+- **Logs de auditoría**: 7 años
+- **Backups**: 30 días de retención (con 2 copias)
+- **GDPR compliance**: Eliminación segura con certificado
 
-Â¿Tienes preguntas adicionales? Puedo ayudarte con:
-- Excepciones a la polÃ­tica
-- Proceso de eliminaciÃ³n de datos
+¿Tienes preguntas adicionales? Puedo ayudarte con:
+- Excepciones a la política
+- Proceso de eliminación de datos
 - Cumplimiento regulatorio
 ```
 
 **User:**
 ```
-Â¿CÃ³mo solicitar una excepciÃ³n?
+¿Cómo solicitar una excepción?
 ```
 
 **Assistant:**
 ```
-Para solicitar una excepciÃ³n (encontrado en: data-exceptions.md):
+Para solicitar una excepción (encontrado en: data-exceptions.md):
 
-ðŸ“‹ Proceso de Solicitud
+📋 Proceso de Solicitud
 
 1. Completa formulario DPA-001 (disponible en SharePoint)
 2. Justifica el motivo (legal, contractual, operacional)
-3. EnvÃ­a a data-governance@empresa.com
-4. Tiempo de respuesta: 10 dÃ­as hÃ¡biles
+3. Envía a data-governance@empresa.com
+4. Tiempo de respuesta: 10 días hábiles
 
-El sistema recordarÃ¡ el contexto de tu pregunta anterior
-y mantendrÃ¡ la conversaciÃ³n fluida.
+El sistema recordará el contexto de tu pregunta anterior
+y mantendrá la conversación fluida.
 ```
 
-### 3. CaracterÃ­sticas
+### 3. Características
 
-âœ… **Memoria de Contexto**: Recuerda preguntas anteriores  
-âœ… **ReformulaciÃ³n**: Interpreta preguntas ambiguas  
-âœ… **BÃºsqueda SemÃ¡ntica**: Extrae documentaciÃ³n relevante  
-âœ… **Sugerencias Relacionadas**: Propone temas seguimiento  
-âœ… **MÃ©tricas**: Registra latencia, tokens, coste en AppInsights  
+- **Memoria de Contexto**: Recuerda preguntas anteriores
+- **Reformulación**: Interpreta preguntas ambiguas
+- **Búsqueda Semántica**: Extrae documentación relevante
+- **Sugerencias Relacionadas**: Propone temas de seguimiento
+- **Métricas**: Registra latencia, tokens, coste en AppInsights
 
 ### 4. Salir
 
@@ -114,36 +110,34 @@ Session guardada en AppInsights
 
 ---
 
-## Architecture
+## Arquitectura
 
 ```
 User Input
-    â†“
-[Context Manager] â†’ Mantiene histÃ³rico de conversaciÃ³n
-    â†“
-[Query Router] â†’ Â¿Reformular? Â¿Buscar en Ã­ndice? Â¿Seguimiento?
-    â†“
-[Search Agent] â†’ BÃºsqueda semÃ¡ntica en Azure Search
-    â†“
-[Context Builder] â†’ Recupera documentos relevantes + histÃ³rico
-    â†“
-[OpenAI Completion] â†’ Genera respuesta conversacional
-    â†“
-[Metrics Logger] â†’ AppInsights + local JSON
-    â†“
+    ↓
+[Context Manager] → Mantiene histórico de conversación
+    ↓
+[Query Router] → ¿Reformular? ¿Buscar en índice? ¿Seguimiento?
+    ↓
+[Search Agent] → Búsqueda semántica en Azure Search
+    ↓
+[Context Builder] → Recupera documentos relevantes + histórico
+    ↓
+[OpenAI Completion] → Genera respuesta conversacional
+    ↓
+[Metrics Logger] → AppInsights + local JSON
+    ↓
 User Response + Suggestions
 ```
 
 ---
 
-## Configuration (`.env`)
+## Configuración (`.env`)
 
 ```
-
-
-RAG_CHAT_MAX_HISTORY=10         # Mantener Ãºltimas 10 interacciones
+RAG_CHAT_MAX_HISTORY=10         # Mantener últimas 10 interacciones
 RAG_CHAT_TIMEOUT=60              # Timeout por turno (segundos)
-RAG_CHAT_TOP_K=8                 # Documentos recuperados por bÃºsqueda
+RAG_CHAT_TOP_K=8                 # Documentos recuperados por búsqueda
 RAG_CHAT_TEMPERATURE=0.5         # Creatividad (0.3=factual, 0.7=creativo)
 RAG_CHAT_MAX_TOKENS=2000         # Max tokens por respuesta
 ```
@@ -152,7 +146,7 @@ RAG_CHAT_MAX_TOKENS=2000         # Max tokens por respuesta
 
 ## Output
 
-Chat session guardada automÃ¡ticamente:
+Chat session guardada automáticamente:
 
 ```json
 {
@@ -161,7 +155,7 @@ Chat session guardada automÃ¡ticamente:
   "messages": [
     {
       "turn": 1,
-      "user_query": "Â¿CuÃ¡l es la polÃ­tica de retenciÃ³n?",
+      "user_query": "¿Cuál es la política de retención?",
       "search_results": 5,
       "assistant_response": "...",
       "tokens_used": 240,
@@ -182,9 +176,8 @@ Chat session guardada automÃ¡ticamente:
 |---------|-----|------|
 | Latencia | 2s | 5s |
 | Coste | $0.02 | $0.05 |
-| Queries | Puntuales | ConversaciÃ³n |
+| Queries | Puntuales | Conversación |
 | Contexto | Stateless | Multi-turno |
-| Uso | BÃºsquedas quick | ExploraciÃ³n profunda |
+| Uso | Búsquedas rápidas | Exploración profunda |
 
 **Elige Chat cuando necesites seguimiento y contexto.**
-

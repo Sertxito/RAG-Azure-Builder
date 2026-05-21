@@ -1,212 +1,212 @@
-**RAG Reference:** [Retrieval-augmented Generation with SharePoint - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/search-solutions-retrieval-augmented-generation)
+**RAG Reference:** [Retrieval-augmented Generation con SharePoint - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/search-solutions-retrieval-augmented-generation)
 
-**Purpose:** Setup complete SharePoint integration (both modes) with no manual intervention except optional Azure portal config.
+**Propósito:** Configurar la integración completa con SharePoint (ambos modos) sin intervención manual excepto configuración opcional en el portal de Azure.
 
-**User Entry:** `copilot-cli run .github/agents/rag-sharepoint-setup.agent.md`
+**Entrada del usuario:** `copilot-cli run .github/agents/rag-sharepoint-setup.agent.md`
 
-**Expected Duration:** 5-15 minutes (depending on mode and document size)
-
----
-
-## âœ… Setup Checklist
-
-- [ ] Azure AD app registered (link provided if needed)
-- [ ] Tenant ID & Client ID obtained
-- [ ] SharePoint site URL identified
-- [ ] (Optional) Client Secret for service principal
-- [ ] (Local mode) Enough disk space for download
-- [ ] (Professional mode) Azure Search instance deployed
+**Duración estimada:** 5-15 minutos (dependiendo del modo y tamaño de documentos)
 
 ---
 
-## Phase-by-Phase Implementation
+## ✅ Lista de verificación de configuración
 
-### Phase 1: Pre-Flight Check (1 min - AUTO)
+- [ ] App de Azure AD registrada (enlace proporcionado si es necesario)
+- [ ] Tenant ID y Client ID obtenidos
+- [ ] URL del sitio SharePoint identificada
+- [ ] (Opcional) Client Secret para service principal
+- [ ] (Modo local) Suficiente espacio en disco para la descarga
+- [ ] (Modo profesional) Instancia de Azure Search desplegada
+
+---
+
+## Implementación fase a fase
+
+### Fase 1: Verificación previa (1 min - AUTO)
 
 ```python
-# Check prerequisites
+# Comprobar prerequisitos
 checks = {
     "Python 3.10+": check_python_version(),
-    "msal installed": check_package("msal"),
-    "requests installed": check_package("requests"),
-    "tqdm installed": check_package("tqdm"),
-    "Azure CLI logged in": check_azure_cli(),
-    "Knowledge folder exists": check_path("knowledge/"),
+    "msal instalado": check_package("msal"),
+    "requests instalado": check_package("requests"),
+    "tqdm instalado": check_package("tqdm"),
+    "Azure CLI con sesión": check_azure_cli(),
+    "Carpeta knowledge existe": check_path("knowledge/"),
 }
 
-print("Pre-Flight Checks:")
+print("Verificaciones previas:")
 for check, result in checks.items():
-    print(f"  {'âœ…' if result else 'âœ—'} {check}")
+    print(f"  {'✅' if result else '✗'} {check}")
 
 if not all(checks.values()):
-    print("Install missing: pip install -r .github/requirements.txt")
+    print("Instalar faltantes: pip install -r .github/requirements.txt")
     exit(1)
 ```
 
-### Phase 2: Interview User (2 min - INTERACTIVE)
+### Fase 2: Entrevista al usuario (2 min - INTERACTIVO)
 
 ```python
 print("\n" + "="*50)
-print("SHAREPOINT INTEGRATION SETUP")
+print("CONFIGURACIÓN DE INTEGRACIÓN SHAREPOINT")
 print("="*50)
 
-# Question 1: Azure AD app
+# Pregunta 1: App de Azure AD
 q1 = ask_user(
-    "Have you registered an app in Azure AD?",
-    choices=["Yes", "No", "I don't know"],
+    "¿Has registrado una app en Azure AD?",
+    choices=["Sí", "No", "No lo sé"],
 )
-if q1 == "No" or q1 == "I don't know":
+if q1 == "No" or q1 == "No lo sé":
     print("""
-    âš  Setup Required First:
+    ⚠ Configuración necesaria primero:
     
-    1. Go to: https://portal.azure.com
-    2. Search: "App registrations"
-    3. Click: "New registration"
-       - Name: "RAG SharePoint Connector"
-       - Redirect URI: http://localhost:8000
-    4. Click: "Register"
-    5. Go to: API Permissions
-    6. Click: "Add permission"
+    1. Ir a: https://portal.azure.com
+    2. Buscar: "Registros de aplicaciones"
+    3. Clic: "Nuevo registro"
+       - Nombre: "RAG SharePoint Connector"
+       - URI de redirección: http://localhost:8000
+    4. Clic: "Registrar"
+    5. Ir a: Permisos de API
+    6. Clic: "Agregar permiso"
        - Microsoft Graph → Sites.Read.All
        - Microsoft Graph → Files.Read.All
        - Microsoft Graph → offline_access
-    7. Click: "Grant admin consent"
-    8. Go to: Certificates & secrets
-    9. Copy: "Application (client) ID"
-    10. Go to: Azure AD → Properties, copy "Directory ID"
+    7. Clic: "Conceder consentimiento del administrador"
+    8. Ir a: Certificados y secretos
+    9. Copiar: "ID de aplicación (cliente)"
+    10. Ir a: Azure AD → Propiedades, copiar "ID de directorio"
     
-    Then come back and run this script again.
+    Luego vuelve y ejecuta este script de nuevo.
     """)
     exit(0)
 
-# Question 2: Mode selection
+# Pregunta 2: Selección de modo
 mode = ask_user(
-    "Which mode?",
-    choices=["Professional (real-time, recommended)", "Local (download)"],
+    "¿Qué modo?",
+    choices=["Profesional (tiempo real, recomendado)", "Local (descarga)"],
 )
-mode = "professional" if "Professional" in mode else "local"
+mode = "professional" if "Profesional" in mode else "local"
 
-# Question 3: SharePoint URL
-sharepoint_url = ask_user("SharePoint site URL:")
-# Format check
+# Pregunta 3: URL de SharePoint
+sharepoint_url = ask_user("URL del sitio SharePoint:")
+# Validar formato
 if not sharepoint_url.startswith("https://") or "sharepoint.com" not in sharepoint_url:
-    print("âœ— Invalid URL. Should be like: https://contoso.sharepoint.com/sites/Docs")
+    print("✗ URL inválida. Debería ser como: https://contoso.sharepoint.com/sites/Docs")
     exit(1)
 
-# Question 4: Tenant ID
-tenant_id = ask_user("Tenant ID (from Azure AD → Properties → Directory ID):")
+# Pregunta 4: Tenant ID
+tenant_id = ask_user("Tenant ID (de Azure AD → Propiedades → ID de directorio):")
 
-# Question 5: Client ID
-client_id = ask_user("Client ID (from App registration → Overview):")
+# Pregunta 5: Client ID
+client_id = ask_user("Client ID (de Registro de aplicación → Información general):")
 
-# Question 6: Client Secret (optional)
+# Pregunta 6: Client Secret (opcional)
 use_secret = ask_user(
-    "Do you have a Client Secret? (for service principal, leave empty for interactive)",
-    choices=["Yes", "No"],
+    "¿Tienes un Client Secret? (para service principal, dejar vacío para interactivo)",
+    choices=["Sí", "No"],
 )
 client_secret = None
-if use_secret == "Yes":
-    print("âš  Enter Client Secret (will NOT be shown, press Enter when done):")
+if use_secret == "Sí":
+    print("⚠ Introduce el Client Secret (NO se mostrará, pulsa Enter cuando termines):")
     import getpass
     client_secret = getpass.getpass()
 
-print("\n✓ Configuration captured")
+print("\n✓ Configuración capturada")
 ```
 
-### Phase 3: Authenticate (2 min - AUTO)
+### Fase 3: Autenticación (2 min - AUTO)
 
 ```python
 from sharepoint_auth import SharePointAuthenticator
 
 print("\n" + "="*50)
-print("AUTHENTICATION")
+print("AUTENTICACIÓN")
 print("="*50)
 
 auth = SharePointAuthenticator(tenant_id, client_id, client_secret)
 
 if client_secret:
-    print("\nâ„¹ Using Service Principal authentication...")
+    print("\nℹ Usando autenticación con Service Principal...")
     config = auth.authenticate_service_principal()
 else:
-    print("\nâ„¹ Opening browser for interactive login...")
+    print("\nℹ Abriendo navegador para login interactivo...")
     config = auth.authenticate_interactive()
 
-print("âœ… Authentication successful!")
-print(f"   Token expires: {config.token_expires_at}")
+print("✅ ¡Autenticación exitosa!")
+print(f"   Token expira: {config.token_expires_at}")
 
-# Save token to file (for future reuse)
+# Guardar token en fichero (para reutilización futura)
 config_file = Path("scripts/sharepoint-auth-cache.json")
 config_file.parent.mkdir(exist_ok=True)
 auth.save_config(config_file)
-print(f"   Config cached: {config_file}")
+print(f"   Config cacheada: {config_file}")
 ```
 
-### Phase 4: Resolve SharePoint Site (1 min - AUTO)
+### Fase 4: Resolver sitio SharePoint (1 min - AUTO)
 
 ```python
 from sharepoint_connector import SharePointConnector
 
 print("\n" + "="*50)
-print("SITE RESOLUTION")
+print("RESOLUCIÓN DEL SITIO")
 print("="*50)
 
-print(f"\nResolving: {sharepoint_url}")
+print(f"\nResolviendo: {sharepoint_url}")
 
 connector = SharePointConnector(config, mode=mode)
 site_info = connector.resolve_sharepoint_site(sharepoint_url)
 
-print(f"\n✓ Site found:")
-print(f"   Name: {site_info['display_name']}")
+print(f"\n✓ Sitio encontrado:")
+print(f"   Nombre: {site_info['display_name']}")
 print(f"   Site ID: {site_info['site_id']}")
 print(f"   Drive ID: {site_info['drive_id']}")
 ```
 
-### Phase 5: Count Documents (1 min - AUTO)
+### Fase 5: Contar documentos (1 min - AUTO)
 
 ```python
 print("\n" + "="*50)
-print("DOCUMENT DISCOVERY")
+print("DESCUBRIMIENTO DE DOCUMENTOS")
 print("="*50)
 
-print("\nScanning all documents and folders...")
+print("\nEscaneando todos los documentos y carpetas...")
 
 items = connector.list_all_items_recursive()
 
 total_size = sum(item["size"] for item in items)
-print(f"\nâœ… Found: {len(items)} documents")
-print(f"   Total size: {total_size / 1024 / 1024 / 1024:.1f} GB")
+print(f"\n✅ Encontrados: {len(items)} documentos")
+print(f"   Tamaño total: {total_size / 1024 / 1024 / 1024:.1f} GB")
 
-# Ask for confirmation if large
+# Pedir confirmación si es grande
 if len(items) > 10000:
     confirm = ask_user(
-        f"Large number of documents ({len(items)}). Continue anyway?",
-        choices=["Yes", "No"],
+        f"Gran número de documentos ({len(items)}). ¿Continuar igualmente?",
+        choices=["Sí", "No"],
     )
     if confirm == "No":
-        print("Setup cancelled.")
+        print("Configuración cancelada.")
         exit(0)
 ```
 
-### Phase 6: Mode-Specific Setup
+### Fase 6: Configuración específica por modo
 
-#### PROFESSIONAL MODE (2-3 min)
+#### MODO PROFESIONAL (2-3 min)
 
 ```python
 if mode == "professional":
     print("\n" + "="*50)
-    print("PROFESSIONAL MODE SETUP")
+    print("CONFIGURACIÓN MODO PROFESIONAL")
     print("="*50)
     
     print("""
-    âœ… Professional mode will:
-       • Create indexer that syncs from SharePoint in real-time
-       • Update Azure Search automatically (hourly)
-       • No document duplication
+    ✅ El modo profesional hará:
+       • Crear indexador que sincroniza desde SharePoint en tiempo real
+       • Actualizar Azure Search automáticamente (cada hora)
+       • Sin duplicación de documentos
     
-    Next steps (MANUAL in Azure Portal):
+    Siguientes pasos (MANUAL en Azure Portal):
     """)
     
-    # Generate config for manual portal setup
+    # Generar config para configuración manual en el portal
     config = connector.setup_professional_mode()
     
     config_file = Path("scripts/sharepoint-indexer-config.json")
@@ -214,78 +214,78 @@ if mode == "professional":
         json.dump(config, f, indent=2)
     
     print(f"""
-    1. Open: https://portal.azure.com
-    2. Go to: Search Service → Data sources
-    3. Click: "+ Add data source"
-    4. Fill form using: {config_file}
+    1. Abrir: https://portal.azure.com
+    2. Ir a: Servicio de Search → Orígenes de datos
+    3. Clic: "+ Agregar origen de datos"
+    4. Rellenar formulario usando: {config_file}
     
-    5. Go to: Indexers
-    6. Click: "+ Create indexer"
-    7. Data source: SharePoint (created above)
-    8. Index: rag-documents
-    9. Skillset: (optional, use if you have one)
-    10. Schedule: 1 hour (or custom)
-    11. Save
+    5. Ir a: Indexadores
+    6. Clic: "+ Crear indexador"
+    7. Origen de datos: SharePoint (creado arriba)
+    8. Índice: rag-documents
+    9. Skillset: (opcional, usar si tienes uno)
+    10. Programación: 1 hora (o personalizada)
+    11. Guardar
     
-    12. Run indexer manually first: Indexers → {config['indexer']['name']} → Run
+    12. Ejecutar indexador manualmente primero: Indexadores → {config['indexer']['name']} → Ejecutar
     
-    âœ… Check status: Indexers → History tab
+    ✅ Verificar estado: Indexadores → Pestaña Historial
     """)
     
-    # Wait for user confirmation
+    # Esperar confirmación del usuario
     confirm = ask_user(
-        "Have you created the indexer in Azure Portal?",
-        choices=["Yes", "No"],
+        "¿Has creado el indexador en Azure Portal?",
+        choices=["Sí", "No"],
     )
     
     if confirm == "No":
-        print("Setup paused. Come back when ready.")
-        print(f"Config saved: {config_file}")
+        print("Configuración pausada. Vuelve cuando estés listo.")
+        print(f"Config guardada: {config_file}")
         exit(0)
 ```
 
-#### LOCAL MODE (3-10 min)
+#### MODO LOCAL (3-10 min)
 
 ```python
-else:  # local mode
+else:  # modo local
     print("\n" + "="*50)
-    print("LOCAL MODE SETUP (DOWNLOAD)")
+    print("CONFIGURACIÓN MODO LOCAL (DESCARGA)")
     print("="*50)
     
     print(f"""
-    âœ… Local mode will:
-       • Download all {len(items)} documents to knowledge/sharepoint-*/
-       • Preserve folder structure
-       • Work offline after download
-       • Coexist with existing knowledge/ documents
+    ✅ El modo local hará:
+       • Descargar los {len(items)} documentos a knowledge/sharepoint-*/
+       • Preservar estructura de carpetas
+       • Funcionar offline después de la descarga
+       • Coexistir con documentos existentes en knowledge/
        
-    Downloading {total_size / 1024 / 1024 / 1024:.1f} GB...
+    Descargando {total_size / 1024 / 1024 / 1024:.1f} GB...
     """)
     
     knowledge_dir = Path("knowledge")
     download_dir = connector.setup_local_mode(knowledge_dir)
     
-    print(f"\nâœ… Download complete!")
-    print(f"   Destination: {download_dir}")
-    print(f"   Manifest: {download_dir / 'manifest.json'}")
+    print(f"\n✅ ¡Descarga completa!")
+    print(f"   Destino: {download_dir}")
+    print(f"   Manifiesto: {download_dir / 'manifest.json'}")
 ```
 
-### Phase 7: Index Documents (Local Mode Only)
+### Fase 7: Indexar documentos (solo modo local)
 
 ```python
 if mode == "local":
     print("\n" + "="*50)
-    print("INDEXING")
+    print("INDEXACIÓN")
     print("="*50)
     
-    # Ask for automatic indexing
+    # Preguntar por indexación automática
     auto_index = ask_user(
-        "Index documents now?",
-        choices=["Yes", "No"],
+        "¿Indexar documentos ahora?",
+        choices=["Sí", "No"],
     )
     
-    if auto_index == "Yes":
-        print("\nRunning rag-indexer.py...")
+    if auto_index == "Sí":
+        print("\nEjecutando rag-indexer.py...")
         import subprocess
         result = subprocess.run(
             ["python", ".github/skills/rag-indexer/indexar.py"],
@@ -293,20 +293,20 @@ if mode == "local":
         )
         
         if result.returncode == 0:
-            print("âœ… Indexing complete!")
+            print("✅ ¡Indexación completa!")
         else:
-            print("âœ— Indexing failed. Run manually:")
+            print("✗ Indexación fallida. Ejecutar manualmente:")
             print("   python .github/skills/rag-indexer/indexar.py")
 ```
 
-### Phase 8: Save Configuration (1 min - AUTO)
+### Fase 8: Guardar configuración (1 min - AUTO)
 
 ```python
 print("\n" + "="*50)
-print("CONFIGURATION")
+print("CONFIGURACIÓN")
 print("="*50)
 
-# Save full config
+# Guardar config completa
 full_config = {
     "mode": mode,
     "sharepoint_url": sharepoint_url,
@@ -326,178 +326,174 @@ config_file.parent.mkdir(exist_ok=True)
 with open(config_file, "w", encoding="utf-8") as f:
     json.dump(full_config, f, indent=2)
 
-print(f"\n✓ Configuration saved: {config_file}")
+print(f"\n✓ Configuración guardada: {config_file}")
 
-# Update .env
+# Actualizar .env
 env_file = Path(".env")
 if env_file.exists():
     with open(env_file, "a", encoding="utf-8") as f:
-        f.write(f"\n# SharePoint Integration\n")
+        f.write(f"\n# Integración SharePoint\n")
         f.write(f"SHAREPOINT_MODE={mode}\n")
         f.write(f"SHAREPOINT_URL={sharepoint_url}\n")
         f.write(f"SHAREPOINT_SITE={site_info['display_name']}\n")
-    print(f"✓ .env updated with SharePoint settings")
+    print(f"✓ .env actualizado con configuración SharePoint")
 ```
 
-### Phase 9: Validation (1 min - AUTO)
+### Fase 9: Validación (1 min - AUTO)
 
 ```python
 print("\n" + "="*50)
-print("VALIDATION")
+print("VALIDACIÓN")
 print("="*50)
 
 tests = {
-    "Authentication": check_auth_token(),
-    "SharePoint accessible": check_sharepoint_connection(),
-    "Configuration saved": config_file.exists(),
+    "Autenticación": check_auth_token(),
+    "SharePoint accesible": check_sharepoint_connection(),
+    "Configuración guardada": config_file.exists(),
 }
 
 for test, result in tests.items():
-    status = "âœ…" if result else "âœ—"
+    status = "✅" if result else "✗"
     print(f"{status} {test}")
 
 if not all(tests.values()):
-    print("\nWarning: Some tests failed. Setup may not be complete.")
+    print("\nAviso: Algunas pruebas fallaron. La configuración puede no estar completa.")
     exit(1)
 ```
 
-### Phase 10: Summary & Next Steps (1 min - AUTO)
+### Fase 10: Resumen y siguientes pasos (1 min - AUTO)
 
 ```python
 print("\n" + "="*50)
-print("âœ… SETUP COMPLETE")
+print("✅ CONFIGURACIÓN COMPLETA")
 print("="*50)
 
 summary = {
-    "Mode": mode.capitalize(),
-    "SharePoint Site": site_info["display_name"],
-    "Documents": len(items),
-    "Total Size": f"{total_size / 1024 / 1024 / 1024:.1f} GB",
-    "Config Saved": str(config_file),
+    "Modo": mode.capitalize(),
+    "Sitio SharePoint": site_info["display_name"],
+    "Documentos": len(items),
+    "Tamaño total": f"{total_size / 1024 / 1024 / 1024:.1f} GB",
+    "Config guardada": str(config_file),
 }
 
 for key, value in summary.items():
     print(f"{key}: {value}")
 
 print("\n" + "="*50)
-print("NEXT STEPS")
+print("SIGUIENTES PASOS")
 print("="*50)
 
 if mode == "professional":
     print("""
-    1. âï¸  MANUAL: Create indexer in Azure Portal
-       - Use config: scripts/sharepoint-indexer-config.json
-       - Set schedule: Hourly (or custom)
-       - Run first sync manually
+    1. ⚙️  MANUAL: Crear indexador en Azure Portal
+       - Usar config: scripts/sharepoint-indexer-config.json
+       - Programar: Cada hora (o personalizado)
+       - Ejecutar primera sincronización manualmente
     
-    2. Monitor: Azure Portal → Search Service → Indexers → Status
+    2. Monitorizar: Azure Portal → Servicio Search → Indexadores → Estado
     
-    3. Query documents:
-       python .github/skills/rag-query-cli/consultar.py "your question"
+    3. Consultar documentos:
+       python .github/skills/rag-query-cli/consultar.py "tu pregunta"
     
-    4. API mode:
+    4. Modo API:
        python .github/skills/rag-api-server/servidor-api.py --port 8000
        curl -X POST http://localhost:8000/query \\
          -H "Content-Type: application/json" \\
-         -d '{"query": "your question"}'
+         -d '{"query": "tu pregunta"}'
     """)
 else:  # local
     print("""
-    1. ✓ Documents downloaded and indexed
+    1. ✓ Documentos descargados e indexados
     
-    2. Query documents:
-       python .github/skills/rag-query-cli/consultar.py "your question"
+    2. Consultar documentos:
+       python .github/skills/rag-query-cli/consultar.py "tu pregunta"
     
-    3. API mode:
+    3. Modo API:
        python .github/skills/rag-api-server/servidor-api.py --port 8000
     
-    4. Monitor:
+    4. Monitorizar:
        python .github/skills/rag-diagnostics/estado-sistema.py
     
-    5. Schedule daily sync (optional):
-       - Add to cron or Task Scheduler
-       - Or modify scripts/sharepoint-sync.sh
+    5. Programar sincronización diaria (opcional):
+       - Añadir a cron o Programador de Tareas
+       - O modificar scripts/sharepoint-sync.sh
     """)
 
-print("\nFor full documentation: .github/skills/rag-sharepoint-connector/SKILL.md")
+print("\nDocumentación completa: .github/skills/rag-sharepoint-connector/SKILL.md")
 ```
 
 ---
 
-## Error Recovery
+## Recuperación de errores
 
-### Authentication Errors
+### Errores de autenticación
 
 ```python
 except Exception as e:
     if "Authentication failed" in str(e):
-        print(f"âœ— {e}")
-        print("Check:")
-        print("  - Tenant ID correct? (Azure AD → Properties)")
-        print("  - Client ID correct? (App registration → Overview)")
-        print("  - Permissions granted? (App registration → API Permissions)")
-        print("  - Admin consent? (API Permissions → Grant admin consent)")
+        print(f"✗ {e}")
+        print("Verificar:")
+        print("  - ¿Tenant ID correcto? (Azure AD → Propiedades)")
+        print("  - ¿Client ID correcto? (Registro de aplicación → Información general)")
+        print("  - ¿Permisos concedidos? (Registro de aplicación → Permisos de API)")
+        print("  - ¿Consentimiento del admin? (Permisos de API → Conceder consentimiento)")
         exit(1)
 ```
 
-### SharePoint Access Errors
+### Errores de acceso a SharePoint
 
 ```python
 except Exception as e:
     if "Access denied" in str(e):
-        print(f"âœ— {e}")
-        print("Fix:")
-        print("  1. Go to SharePoint Admin Center")
-        print("  2. Go to Share Data Access")
-        print("  3. Find your RAG app")
-        print("  4. Grant access to the site")
+        print(f"✗ {e}")
+        print("Solución:")
+        print("  1. Ir al Centro de Administración de SharePoint")
+        print("  2. Ir a Compartir acceso a datos")
+        print("  3. Encontrar tu app RAG")
+        print("  4. Conceder acceso al sitio")
         exit(1)
 ```
 
-### Network/Timeout Errors (Local Mode)
+### Errores de red/Timeout (Modo local)
 
 ```python
 except requests.Timeout:
-    print("âœ— Download timeout. Possible causes:")
-    print("  - Network issue")
-    print("  - Large files")
-    print("  - SharePoint throttling")
-    print("\nRetry or:")
-    print("  - Split documents into smaller library")
-    print("  - Use professional mode instead")
+    print("✗ Timeout en la descarga. Posibles causas:")
+    print("  - Problema de red")
+    print("  - Archivos grandes")
+    print("  - Throttling de SharePoint")
+    print("\nReintentar o:")
+    print("  - Dividir documentos en biblioteca más pequeña")
+    print("  - Usar modo profesional en su lugar")
     exit(1)
 ```
 
 ---
 
-## Integration with Onboarding
+## Integración con onboarding
 
-When user has SharePoint in `rag-onboarding.agent.md`:
+Cuando el usuario tiene SharePoint en `rag-onboarding.agent.md`:
 
 ```python
-# In rag-onboarding agent Phase 2 (Interview):
-if ask_user("Do you have SharePoint documents?") == "Yes":
-    print("\nGreat! We'll handle SharePoint for you.")
-    mode = ask_user("Preferred mode?", choices=["Professional", "Local"])
+# En rag-onboarding agente Fase 2 (Entrevista):
+if ask_user("¿Tienes documentos en SharePoint?") == "Sí":
+    print("\n¡Genial! Nos encargamos de SharePoint.")
+    mode = ask_user("¿Modo preferido?", choices=["Profesional", "Local"])
     
-    # Later, in Phase 5 (Indexing):
+    # Después, en Fase 5 (Indexación):
     call_agent("rag-sharepoint-setup", {
         "mode": mode.lower(),
-        # User confirms manually or we auto-prompt
     })
 ```
 
 ---
 
-## Success Criteria
+## Criterios de éxito
 
-✅ Agent completes successfully when:
-- [ ] User authenticated (tokens obtained)
-- [ ] SharePoint site resolved (drive ID found)
-- [ ] Documents discovered (at least 1 item)
-- [ ] Mode configured (professional OR local mode complete)
-- [ ] Configuration saved to scripts/sharepoint-config.json
-- [ ] .env updated (if local mode)
-- [ ] (Local only) Documents indexed or user shown how to index
-- [ ] User has clear next steps
-
+✅ El agente completa exitosamente cuando:
+- [ ] Usuario autenticado (tokens obtenidos)
+- [ ] Sitio SharePoint resuelto (drive ID encontrado)
+- [ ] Documentos descubiertos (al menos 1 elemento)
+- [ ] Modo configurado (modo profesional O local completado)
+- [ ] Configuración guardada en scripts/sharepoint-config.json
+- [ ] .env actualizado (si modo local)

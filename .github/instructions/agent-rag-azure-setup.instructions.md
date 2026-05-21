@@ -3,61 +3,58 @@
 
 
 
-**Purpose:** Deploy Azure infrastructure (OpenAI, Search, AppInsights). Automatic.
+**Propósito:** Desplegar infraestructura Azure (OpenAI, Search, AppInsights). Automático.
 
-**Called By:** rag-onboarding.agent.md (Phase 4) OR manual: `copilot-cli run rag-azure-setup.agent.md`
+**Invocado por:** rag-onboarding.agent.md (Fase 4) O manual: `copilot-cli run rag-azure-setup.agent.md`
 
-**Expected Duration:** 10-15 minutes (fully automatic, minimal interaction)
-
----
-
-## âœ… Deployment Checklist
-
-- [ ] Validate prerequisites (az CLI, logged in)
-- [ ] Verify Bicep templates exist (infra/main.bicep)
-- [ ] Create Azure Resource Group
-- [ ] Deploy OpenAI via Bicep
-- [ ] Deploy AI Search via Bicep
-- [ ] Deploy AppInsights via Bicep
-- [ ] Extract credentials from deployment
-- [ ] Show deployment summary
+**Duración estimada:** 10-15 minutos (totalmente automático, interacción mínima)
 
 ---
 
-## Prerequisites Check (1 min - AUTO)
+## ✅ Lista de verificación del despliegue
+
+- [ ] Validar prerequisitos (az CLI, sesión iniciada)
+- [ ] Verificar que existen las plantillas Bicep (infra/main.bicep)
+- [ ] Crear grupo de recursos de Azure
+- [ ] Desplegar OpenAI mediante Bicep
+- [ ] Desplegar AI Search mediante Bicep
+- [ ] Desplegar AppInsights mediante Bicep
+- [ ] Extraer credenciales del despliegue
+- [ ] Mostrar resumen del despliegue
+
+---
+
+## Verificación de prerequisitos (1 min - AUTO)
 
 ```bash
-
-
+# Verificar CLI de Azure instalada
 az version
 
-
-
+# Verificar sesión activa
 az account show
 
-
-
+# Verificar plantilla Bicep
 test -f infra/main.bicep || {
-  echo "âŒ infra/main.bicep not found"
+  echo "❌ infra/main.bicep no encontrado"
   exit 1
 }
 ```
 
-**If not logged in:**
+**Si no se ha iniciado sesión:**
 ```
-âš ï¸ Not logged in to Azure CLI.
+⚠️ No se ha iniciado sesión en Azure CLI.
 
-Running: az login
-â†’ Opens browser for authentication...
+Ejecutando: az login
+→ Abre el navegador para autenticación...
 
-Proceed? (Y/n)
+¿Continuar? (S/n)
 ```
 
 ---
 
-## Get Deployment Parameters
+## Obtener parámetros de despliegue
 
-**From environment or from .env:**
+**Desde variables de entorno o desde .env:**
 
 ```python
 import os
@@ -78,7 +75,7 @@ params = {
 
 ---
 
-## Phase 1: Create Resource Group (2 min)
+## Fase 1: Crear grupo de recursos (2 min)
 
 ```bash
 #!/bin/bash
@@ -86,9 +83,9 @@ params = {
 RG_NAME="${RESOURCE_GROUP}"
 REGION="${AZURE_REGION}"
 
-echo "ðŸš€ Creating Resource Group..."
-echo "   Name: $RG_NAME"
-echo "   Region: $REGION"
+echo "🚀 Creando grupo de recursos..."
+echo "   Nombre: $RG_NAME"
+echo "   Región: $REGION"
 
 az group create \
   --name "$RG_NAME" \
@@ -96,21 +93,21 @@ az group create \
   --tags project="${PROJECT_NAME}" created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 if [ $? -eq 0 ]; then
-    echo "âœ… Resource Group created"
+    echo "✅ Grupo de recursos creado"
 else
-    echo "âŒ Failed to create Resource Group"
+    echo "❌ Error al crear el grupo de recursos"
     exit 1
 fi
 ```
 
 ---
 
-## Phase 2: Deploy Bicep Template (8-10 min)
+## Fase 2: Desplegar plantilla Bicep (8-10 min)
 
 ```bash
 #!/bin/bash
 
-echo "â³ Deploying Azure services via Bicep..."
+echo "⏳ Desplegando servicios Azure mediante Bicep..."
 
 az deployment group create \
   --resource-group "$RG_NAME" \
@@ -125,37 +122,37 @@ az deployment group create \
   --output json > deployment-output.json
 
 if [ $? -eq 0 ]; then
-    echo "âœ… Bicep deployment successful"
+    echo "✅ Despliegue Bicep exitoso"
 else
-    echo "âŒ Bicep deployment failed"
+    echo "❌ El despliegue Bicep ha fallado"
     exit 1
 fi
 ```
 
-**Show Progress:**
+**Mostrar progreso:**
 ```
-â³ Deploying services...
+⏳ Desplegando servicios...
 
-âœ… Azure OpenAI (gpt-4o)
+✅ Azure OpenAI (gpt-4o)
    Endpoint: https://rag-xxx.openai.azure.com
-   Model: gpt-4o
-   Tokens/mo: 2M
+   Modelo: gpt-4o
+   Tokens/mes: 2M
 
-âœ… Azure AI Search (Standard, 1 replica)
+✅ Azure AI Search (Standard, 1 réplica)
    Endpoint: https://rag-xxx.search.windows.net
-   Index: rag-documents
-   Semantic search: enabled
+   Índice: rag-documents
+   Búsqueda semántica: habilitada
 
-âœ… Application Insights
-   Instrumentation Key: [hidden]
-   Retention: 30 days
+✅ Application Insights
+   Clave de instrumentación: [oculta]
+   Retención: 30 días
 
-ðŸŽ‰ All services deployed!
+🎉 ¡Todos los servicios desplegados!
 ```
 
 ---
 
-## Phase 3: Extract Credentials (2 min - AUTO)
+## Fase 3: Extraer credenciales (2 min - AUTO)
 
 ```python
 import json
@@ -163,56 +160,46 @@ import subprocess
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 
-
-
+# Leer salida del despliegue
 with open("deployment-output.json") as f:
     deployment = json.load(f)
 
-
-
+# Extraer endpoints y claves
 openai_endpoint = deployment["properties"]["outputs"]["openaiEndpoint"]["value"]
 openai_key = deployment["properties"]["outputs"]["openaiKey"]["value"]
 
-
-
+# Search
 search_endpoint = deployment["properties"]["outputs"]["searchEndpoint"]["value"]
 search_key = deployment["properties"]["outputs"]["searchKey"]["value"]
 
-
-
+# AppInsights
 appinsights_key = deployment["properties"]["outputs"]["appInsightsKey"]["value"]
 
-print("âœ… Credentials extracted from deployment")
+print("✅ Credenciales extraídas del despliegue")
 ```
 
 ---
 
-## Phase 4: Update .env (1 min - AUTO)
+## Fase 4: Actualizar .env (1 min - AUTO)
 
 ```python
-env_content = f"""# RAG Configuration (Auto-generated: {timestamp})
+env_content = f"""# Configuración RAG (Auto-generado: {timestamp})
 
-
-
-
-
+# === Azure OpenAI ===
 AZURE_OPENAI_ENDPOINT={openai_endpoint}
 AZURE_OPENAI_API_KEY={openai_key}
 OPENAI_CHAT_MODEL=gpt-4o
 OPENAI_DEPLOYMENT=gpt-4o
 
-
-
+# === Azure AI Search ===
 AZURE_SEARCH_ENDPOINT={search_endpoint}
 AZURE_SEARCH_API_KEY={search_key}
 SEARCH_INDEX=rag-documents
 
-
-
+# === Observabilidad ===
 AZURE_APPINSIGHTS_KEY={appinsights_key}
 
-
-
+# === Configuración RAG ===
 RAG_TOP_K=5
 RAG_TEMPERATURE=0.7
 RAG_MAX_TOKENS=1000
@@ -221,16 +208,15 @@ RAG_MAX_TOKENS=1000
 with open(".env", "w") as f:
     f.write(env_content)
 
-
-
+# Asegurar permisos del fichero
 os.chmod(".env", 0o600)
 
-print("âœ… .env updated with credentials")
+print("✅ .env actualizado con las credenciales")
 ```
 
 ---
 
-## Phase 5: Save Deployment Summary (1 min)
+## Fase 5: Guardar resumen del despliegue (1 min)
 
 ```python
 summary = {
@@ -259,98 +245,96 @@ summary = {
 with open(f"outputs/deployment-summary-{timestamp}.json", "w") as f:
     json.dump(summary, f, indent=2)
 
-print(f"âœ… Deployment summary saved to outputs/")
+print(f"✅ Resumen del despliegue guardado en outputs/")
 ```
 
 ---
 
-## Error Handling
+## Manejo de errores
 
-### Resource Group Already Exists
+### El grupo de recursos ya existe
 ```
-âš ï¸ Resource Group '{RG_NAME}' already exists.
+⚠️ El grupo de recursos '{RG_NAME}' ya existe.
 
-Options:
-  A) Use existing (reuse)
-  B) Create new with different name
-  C) Cancel
+Opciones:
+  A) Usar el existente (reutilizar)
+  B) Crear uno nuevo con nombre diferente
+  C) Cancelar
 
-Your choice? (A/B/C)
+¿Tu elección? (A/B/C)
 ```
 
-### Deployment Fails
+### El despliegue falla
 ```
-âŒ Bicep deployment failed.
+❌ El despliegue Bicep ha fallado.
 
 Error:
-  RegionQuotaExceeded: OpenAI quota exhausted in eastus
+  RegionQuotaExceeded: Cuota de OpenAI agotada en eastus
 
-Suggestions:
-  â€¢ Try region: westus2
-  â€¢ Request quota increase (azure.microsoft.com/quotas)
-  â€¢ Reduce tier: S0 â†’ Standby
+Sugerencias:
+  • Probar región: westus2
+  • Solicitar aumento de cuota (azure.microsoft.com/quotas)
+  • Reducir tier: S0 → Standby
 
-Retry with westus2? (Y/n)
+¿Reintentar con westus2? (S/n)
 ```
 
-### Service Deployment Partial Failure
+### Fallo parcial en el despliegue de servicios
 ```
-âš ï¸ Deployment partially successful:
+⚠️ Despliegue parcialmente exitoso:
 
-âœ… OpenAI: Deployed
-âœ… Search: Deployed
-âŒ AppInsights: Failed (SKU not available)
+✅ OpenAI: Desplegado
+✅ Search: Desplegado
+❌ AppInsights: Fallido (SKU no disponible)
 
-Options:
-  A) Continue without AppInsights
-  B) Retry with different region
-  C) Cancel and cleanup
+Opciones:
+  A) Continuar sin AppInsights
+  B) Reintentar con otra región
+  C) Cancelar y limpiar
 
-Your choice? (A/B/C)
+¿Tu elección? (A/B/C)
 ```
 
-### Can't Extract Credentials
+### No se pueden extraer credenciales
 ```
-âŒ Could not extract credentials from deployment.
+❌ No se pudieron extraer las credenciales del despliegue.
 
-Troubleshooting:
-  1. Check Resource Group exists: az group list
-  2. Check deployment status: az deployment group list -g {RG_NAME}
-  3. Check .json output file exists
+Solución de problemas:
+  1. Verificar que el grupo de recursos existe: az group list
+  2. Verificar estado del despliegue: az deployment group list -g {RG_NAME}
+  3. Verificar que el fichero .json de salida existe
 
-Retry? (Y/n)
+¿Reintentar? (S/n)
 ```
 
 ---
 
-## Rollback Support
+## Soporte de rollback
 
-If deployment fails mid-way:
+Si el despliegue falla a mitad del proceso:
 
 ```bash
-
-
-echo "ðŸ—‘ï¸  Cleaning up resources..."
+# Eliminar grupo de recursos completo
+echo "🗑️  Limpiando recursos..."
 
 az group delete \
   --name "$RG_NAME" \
   --yes \
   --no-wait
 
-echo "âœ… Resource Group marked for deletion (takes ~5 min)"
+echo "✅ Grupo de recursos marcado para eliminación (tarda ~5 min)"
 ```
 
 ---
 
-## Success Criteria
+## Criterios de éxito
 
-âœ… All 3 services deployed (OpenAI, Search, AppInsights)
+✅ Los 3 servicios desplegados (OpenAI, Search, AppInsights)
 
-âœ… Credentials extracted and saved to `.env`
+✅ Credenciales extraídas y guardadas en `.env`
 
-âœ… File permissions secured (600)
+✅ Permisos de fichero asegurados (600)
 
-âœ… Deployment summary saved to `outputs/`
+✅ Resumen del despliegue guardado en `outputs/`
 
-âœ… User ready for next phase: Indexing
-
+✅ Usuario listo para la siguiente fase: Indexación

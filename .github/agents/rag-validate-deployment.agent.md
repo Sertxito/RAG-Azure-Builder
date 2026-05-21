@@ -1,6 +1,6 @@
 ---
 name: 'RAG: Validate Deployment'
-description: 'Validates cost and architecture before deploying RAG infrastructure. Prevents expensive mistakes with cost analysis and tier recommendations.'
+description: 'Valida costes y arquitectura antes de desplegar infraestructura RAG. Previene errores costosos con análisis de costes y recomendaciones de tier.'
 model: 'claude-opus-4.7'
 tools: true
 skills: ['rag-architecture-optimizer', 'rag-cost-analyst', 'rag-validator']
@@ -8,93 +8,93 @@ skills: ['rag-architecture-optimizer', 'rag-cost-analyst', 'rag-validator']
 
 **RAG Reference:** [Retrieval-augmented Generation (RAG) in Azure AI Search - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview?tabs=videos)
 
-## Purpose
+## Propósito
 
-Run **BEFORE** `rag-azure-setup.agent.md` to validate:
-- ✅ Cost fits budget
-- ✅ Architecture is right-sized
-- ✅ Models available in target region
-- ✅ No over-provisioning
-- ✅ Optimizations recommended
+Ejecutar **ANTES** de `rag-azure-setup.agent.md` para validar:
+- ✅ El coste se ajusta al presupuesto
+- ✅ La arquitectura está bien dimensionada
+- ✅ Los modelos están disponibles en la región objetivo
+- ✅ Sin sobredimensionamiento
+- ✅ Optimizaciones recomendadas
 
 ---
 
-## When to use
+## Cuándo usar
 
-- `Validate deployment cost`
-- `Check if configuration is optimal`
-- `Review architecture before deploy`
-- `Find cost savings`
+- `Validar coste del despliegue`
+- `Verificar si la configuración es óptima`
+- `Revisar arquitectura antes de desplegar`
+- `Encontrar ahorros de coste`
 
 ---
 
 ## Workflow
 
-### 1. Load Configuration
+### 1. Cargar configuración
 
-From `.env` or user input:
+Desde `.env` o input del usuario:
 - `AZURE_REGION` (eastus, westus2, swedencentral…)
 - `AZURE_SEARCH_TIER` (basic, standard)
 - `AZURE_SEARCH_REPLICAS` (1-12)
 - `APP_INSIGHTS_RETENTION_DAYS` (30-730)
-- `ESTIMATED_QUERIES_MONTHLY` (default: 1,000)
-- `BUDGET_USD` (default: 2,000)
+- `ESTIMATED_QUERIES_MONTHLY` (por defecto: 1,000)
+- `BUDGET_USD` (por defecto: 2,000)
 
-### 2. Check Region → Model Availability
+### 2. Verificar región → Disponibilidad de modelos
 
 ```python
 from cost_analyzer import validate_region_models
 check = validate_region_models(["gpt-4o", "text-embedding-3-small"], region)
-# If not available → suggest swedencentral / eastus / northeurope
+# Si no disponible → sugerir swedencentral / eastus / northeurope
 ```
 
-### 3. Analyze with Azure Architect
+### 3. Analizar con Azure Architect
 
-✅ **Checks:**
-- Search tier appropriate for document volume?
-- Replicas right-sized for QPS?
-- OpenAI tier sufficient?
-- AppInsights retention reasonable?
+✅ **Verifica:**
+- ¿Tier de Search apropiado para volumen de documentos?
+- ¿Réplicas bien dimensionadas para QPS?
+- ¿Tier de OpenAI suficiente?
+- ¿Retención de AppInsights razonable?
 
-🔍 **Output:** Architecture recommendations
+🔍 **Salida:** Recomendaciones de arquitectura
 
-### 4. Analyze with Cost Analyst
+### 4. Analizar con Cost Analyst
 
-📊 **Calculates:**
-- Monthly infrastructure cost
-- Estimated monthly inference cost
-- Total monthly spend
-- Optimizations available
+📊 **Calcula:**
+- Coste mensual de infraestructura
+- Coste mensual estimado de inferencia
+- Gasto mensual total
+- Optimizaciones disponibles
 
-### 5. Present Findings
+### 5. Presentar resultados
 
 ```
-COST BREAKDOWN (Monthly)          ⚠️  Estimates in USD (verify at azure.com/pricing)
+DESGLOSE DE COSTES (Mensual)          ⚠️  Estimaciones en USD (verificar en azure.com/pricing)
 ─────────────────────────────────────────────────────────────────────
-Azure OpenAI (S0, pay-per-token)    ~$10
-  • 1K queries × ~$0.010/query (gpt-4o: $2.50/1M in + $10/1M out)
-  • Scales directly with query volume
+Azure OpenAI (S0, pago por token)    ~$10
+  • 1K consultas × ~$0.010/consulta (gpt-4o: $2.50/1M in + $10/1M out)
+  • Escala directamente con volumen de consultas
 
 Azure AI Search Standard S1          $295
-  • 1 replica (add 2nd for HA: +$295/mo)
-  • Semantic: $0 under 1K queries/mo, then $5/1K
+  • 1 réplica (añadir 2ª para HA: +$295/mes)
+  • Semántico: $0 bajo 1K consultas/mes, luego $5/1K
 
 App Insights                           $0
-  • Under 5 GB/month free
+  • Bajo 5 GB/mes gratis
 
 Storage                                $0
-  • Under 50 GB
+  • Bajo 50 GB
 
-CURRENT TOTAL: ~$305/month  (1K queries, 1 replica, no HA)
-WITH HA (2 replicas): ~$600/month
+TOTAL ACTUAL: ~$305/mes  (1K consultas, 1 réplica, sin HA)
+CON HA (2 réplicas): ~$600/mes
 
-Recommendation: Standard S1 required for vector + semantic search.
-Proceed? (yes/no)
+Recomendación: Standard S1 requerido para búsqueda vectorial + semántica.
+¿Proceder? (S/n)
 ```
 
 ---
 
-## Next Steps
+## Siguientes pasos
 
-✅ If approved: Run `rag-azure-setup.agent.md`
-❌ If rejected: Adjust config and re-run validator
+✅ Si aprobado: Ejecutar `rag-azure-setup.agent.md`
+❌ Si rechazado: Ajustar configuración y re-ejecutar validador

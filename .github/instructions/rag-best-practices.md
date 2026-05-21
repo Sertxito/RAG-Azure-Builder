@@ -1,130 +1,130 @@
 ---
-description: 'RAG Best Practices from Microsoft Learn: agentic retrieval vs classic RAG, content preparation, relevance tuning'
+description: 'Mejores prácticas RAG de Microsoft Learn: retrieval agéntico vs RAG clásico, preparación de contenido, ajuste de relevancia'
 ---
 
-# RAG Best Practices for MENSADEF
+# Mejores Prácticas RAG para MENSADEF
 
-**Reference:** [Retrieval-augmented Generation (RAG) in Azure AI Search - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview)
+**Referencia:** [Retrieval-augmented Generation (RAG) en Azure AI Search - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview)
 
-> "RAG is a pattern that extends LLM capabilities by grounding responses in your proprietary content. While conceptually simple, RAG implementations face significant challenges."
+> "RAG es un patrón que extiende las capacidades del LLM fundamentando las respuestas en tu contenido propietario. Aunque conceptualmente simple, las implementaciones RAG enfrentan desafíos significativos."
 
 ---
 
-## The Challenge of RAG
+## El desafío del RAG
 
-### 1. Query Understanding
+### 1. Comprensión de consultas
 
-**The Problem:**  
-Users ask conversational, complex, or vague questions:
+**El problema:**  
+Los usuarios hacen preguntas conversacionales, complejas o vagas:
 > "¿Cuáles son las políticas de PTO para empleados remotos contratados después de 2023?"
 
-But documents say:
-- "time off" (English docs)
-- "telecommute"
-- "recent hires"
+Pero los documentos dicen:
+- "time off" (docs en inglés)
+- "teletrabajo"
+- "incorporaciones recientes"
 
-**Traditional keyword search fails.** It looks for exact matches, not intent.
-
----
-
-### 2. Multi-Source Data Access
-
-**The Problem:**  
-Enterprise content spans multiple platforms:
-- SharePoint (HR policies)
-- Databases (employee records)
-- Blob Storage (PDFs, Word docs)
-- Code repositories (SQL, procedures)
-
-**Creating a unified search corpus without disrupting data operations is essential.**
+**La búsqueda tradicional por keywords falla.** Busca coincidencias exactas, no intención.
 
 ---
 
-### 3. Token Constraints
+### 2. Acceso a datos multi-fuente
 
-**The Problem:**  
-LLMs accept limited tokens (~128K for gpt-4o):
-- You have 10,000 pages of documentation
-- Sending everything wastes tokens and degrades quality
-- Response time becomes unacceptable
+**El problema:**  
+El contenido enterprise abarca múltiples plataformas:
+- SharePoint (políticas RRHH)
+- Bases de datos (registros de empleados)
+- Blob Storage (PDFs, docs Word)
+- Repositorios de código (SQL, procedimientos)
 
-**Your retrieval system must return highly relevant, concise results — not exhaustive document dumps.**
-
----
-
-### 4. Response Time Expectations
-
-**The Problem:**  
-Users expect AI-powered answers in **3-5 seconds**, not minutes.
-
-**The retrieval system must balance thoroughness with speed.**
+**Crear un corpus de búsqueda unificado sin interrumpir las operaciones de datos es esencial.**
 
 ---
 
-### 5. Security and Governance
+### 3. Restricciones de tokens
 
-**The Problem:**  
-Opening private content to LLMs requires granular access control:
-- Finance data should only be accessible to finance team
-- Even when an executive asks the chatbot
-- Users must only retrieve authorized content
+**El problema:**  
+Los LLMs aceptan tokens limitados (~128K para gpt-4o):
+- Tienes 10,000 páginas de documentación
+- Enviar todo desperdicia tokens y degrada la calidad
+- El tiempo de respuesta se vuelve inaceptable
+
+**Tu sistema de recuperación debe devolver resultados altamente relevantes y concisos — no volcados exhaustivos de documentos.**
 
 ---
 
-## How Azure AI Search Solves These Challenges
+### 4. Expectativas de tiempo de respuesta
 
-### Azure AI Search: Two Approaches
+**El problema:**  
+Los usuarios esperan respuestas potenciadas por IA en **3-5 segundos**, no minutos.
 
-#### 1. **Agentic Retrieval** (Recommended for New Projects)
+**El sistema de recuperación debe equilibrar exhaustividad con velocidad.**
 
-**Use when:**
-- Your client is an agent or chatbot
-- You need the highest possible relevance and accuracy
-- Your queries are complex or conversational
-- You want structured responses with citations and query details
-- You're building new RAG implementations
+---
 
-**How it works:**
+### 5. Seguridad y gobernanza
+
+**El problema:**  
+Abrir contenido privado a LLMs requiere control de acceso granular:
+- Los datos financieros solo deben ser accesibles para el equipo de finanzas
+- Incluso cuando un ejecutivo pregunta al chatbot
+- Los usuarios solo deben recuperar contenido autorizado
+
+---
+
+## Cómo Azure AI Search resuelve estos desafíos
+
+### Azure AI Search: Dos enfoques
+
+#### 1. **Retrieval Agéntico** (Recomendado para proyectos nuevos)
+
+**Usar cuando:**
+- Tu cliente es un agente o chatbot
+- Necesitas la mayor relevancia y precisión posible
+- Tus consultas son complejas o conversacionales
+- Quieres respuestas estructuradas con citas y detalles de consulta
+- Estás construyendo nuevas implementaciones RAG
+
+**Cómo funciona:**
 
 ```
-User Query
+Consulta del usuario
     ↓
-LLM analyzes query → generates multiple sub-queries
+LLM analiza consulta → genera múltiples sub-consultas
     ↓
-Parallel execution across all sub-queries
+Ejecución paralela de todas las sub-consultas
     ↓
-Parallel execution (not sequential)
+Ejecución paralela (no secuencial)
     ↓
-Structured response with grounding data
+Respuesta estructurada con datos de fundamentación
     ↓
-Built-in citation tracking
+Seguimiento de citas integrado
     ↓
-Query activity log explains what was searched
+Log de actividad explica qué se buscó
     ↓
-Optional answer synthesis (uses LLM-formulated answer)
+Síntesis de respuesta opcional (usa respuesta formulada por LLM)
 ```
 
-**Features:**
-- Context-aware query planning using conversation history
-- Parallel execution of multiple focused sub-queries
-- Structured responses with grounding data, citations, execution metadata
-- Built-in semantic ranking for optimal relevance
-- Optional answer synthesis that uses LLM-formulated answer in response
+**Características:**
+- Planificación de consultas con contexto usando historial de conversación
+- Ejecución paralela de múltiples sub-consultas enfocadas
+- Respuestas estructuradas con datos de fundamentación, citas, metadatos de ejecución
+- Ranking semántico integrado para relevancia óptima
+- Síntesis de respuesta opcional que usa respuesta formulada por LLM
 
-**Architecture:**
+**Arquitectura:**
 ```
-Knowledge Sources (multi-source)
+Fuentes de conocimiento (multi-fuente)
     ↓
-Knowledge Base (unified interface)
+Base de conocimiento (interfaz unificada)
     ↓
-Retrieve Action (called from agent code as tool)
+Acción Retrieve (llamada desde código del agente como tool)
     ↓
-LLM Agentic Reasoning
+Razonamiento agéntico LLM
     ↓
-Agent responds to user
+El agente responde al usuario
 ```
 
-**Example Workflow:**
+**Ejemplo de workflow:**
 
 ```python
 from azure_ai_search import AgenticRetrieval
@@ -135,55 +135,55 @@ retriever = AgenticRetrieval(
     knowledge_base="rag-kb-mensadef"
 )
 
-# Agent queries knowledge base
+# El agente consulta la base de conocimiento
 response = retriever.retrieve(
     query="¿Cuáles son las políticas de PTO para remotos?",
     reasoning_effort="medium",  # minimal/low/medium
     top_k=5
 )
 
-# Structured response
-print(response.answer)           # LLM-generated answer
+# Respuesta estructurada
+print(response.answer)           # Respuesta generada por LLM
 print(response.citations)       # [{"text": "...", "source": "..."}]
-print(response.follow_ups)      # Suggested next questions
+print(response.follow_ups)      # Siguientes preguntas sugeridas
 ```
 
 ---
 
-#### 2. **Classic RAG** (For GA/Stable Features)
+#### 2. **RAG Clásico** (Para features GA/estables)
 
-**Use when:**
-- You need generally available (GA) features only
-- Simplicity and speed are priorities over advanced relevance
-- You have existing orchestration code you want to preserve
-- You need fine-grained control over the query pipeline
+**Usar cuando:**
+- Necesitas solo features generalmente disponibles (GA)
+- La simplicidad y velocidad son prioridad sobre relevancia avanzada
+- Tienes código de orquestación existente que quieres preservar
+- Necesitas control granular sobre el pipeline de consultas
 
-**How it works:**
+**Cómo funciona:**
 
 ```
-User Query
+Consulta del usuario
     ↓
-Application sends single query to Azure AI Search
+La aplicación envía una sola consulta a Azure AI Search
     ↓
-Hybrid Query (keyword + vector search)
+Consulta híbrida (keyword + búsqueda vectorial)
     ↓
-Results ranked by semantic relevance
+Resultados rankeados por relevancia semántica
     ↓
-Application orchestrates handoff to LLM
+La aplicación orquesta el handoff al LLM
     ↓
-LLM formulates answer using flattened result set
+LLM formula respuesta usando el conjunto de resultados
     ↓
-Response returned to user
+Respuesta devuelta al usuario
 ```
 
-**Features:**
-- Hybrid queries combine keyword (BM25) and vector search for maximum recall
-- Semantic ranking re-scores results based on meaning, not just keywords
-- Vector similarity search matches concepts, not exact terms
-- Simpler architecture with fewer failure points
-- Fine-grained control over the query pipeline
+**Características:**
+- Consultas híbridas combinan keyword (BM25) y búsqueda vectorial para máximo recall
+- Ranking semántico re-puntúa resultados por significado, no solo keywords
+- Búsqueda por similitud vectorial coincide conceptos, no términos exactos
+- Arquitectura más simple con menos puntos de fallo
+- Control granular sobre el pipeline de consultas
 
-**Example Workflow:**
+**Ejemplo de workflow:**
 
 ```python
 from azure.search.documents import SearchClient
@@ -195,7 +195,7 @@ client = SearchClient(
     credential=AzureKeyCredential(key)
 )
 
-# Hybrid query: keyword + vector
+# Consulta híbrida: keyword + vector
 query_vector = generate_embedding("PTO policy remote")
 results = client.search(
     search_text="política PTO empleados remotos",
@@ -205,7 +205,7 @@ results = client.search(
     semantic_configuration_name="default"
 )
 
-# Application passes results to LLM
+# La aplicación pasa resultados al LLM
 context = "\n".join([r["content"] for r in results])
 response = llm.generate(
     query="¿Cuáles son las políticas de PTO para remotos?",
@@ -215,97 +215,97 @@ response = llm.generate(
 
 ---
 
-## Content Preparation for RAG
+## Preparación de contenido para RAG
 
-### How to Maximize Relevance and Recall
+### Cómo maximizar relevancia y recall
 
-#### 1. **Chunking Strategy**
+#### 1. **Estrategia de chunking**
 
-**Problem:**  
-Large documents (50+ pages) don't work well in vector search. Query results return entire documents instead of relevant sections.
+**Problema:**  
+Documentos grandes (50+ páginas) no funcionan bien en búsqueda vectorial. Los resultados devuelven documentos enteros en vez de secciones relevantes.
 
-**Solution:**  
-Split documents into semantic chunks (200-500 tokens each):
+**Solución:**  
+Dividir documentos en chunks semánticos (200-500 tokens cada uno):
 
 ```
-Document: "HR_Handbook_2024.pdf" (100 pages)
+Documento: "HR_Handbook_2024.pdf" (100 páginas)
     ↓
-Chunk 1: "Section 1.1: Employment Policies" (250 tokens)
-Chunk 2: "Section 1.2: Work Hours" (300 tokens)
-Chunk 3: "Section 2.1: PTO Policy - General" (400 tokens)
-Chunk 4: "Section 2.2: PTO Policy - Remote Workers" (350 tokens)
+Chunk 1: "Sección 1.1: Políticas de empleo" (250 tokens)
+Chunk 2: "Sección 1.2: Horarios de trabajo" (300 tokens)
+Chunk 3: "Sección 2.1: Política PTO - General" (400 tokens)
+Chunk 4: "Sección 2.2: Política PTO - Trabajadores remotos" (350 tokens)
 ...
-Chunk N: "Section 8.5: Termination Procedures" (275 tokens)
+Chunk N: "Sección 8.5: Procedimientos de terminación" (275 tokens)
 ```
 
-**Best Practices:**
-- Preserve semantic boundaries (don't split mid-sentence/section)
-- Include parent document metadata (title, source, author)
-- Overlap chunks slightly (20-50 tokens) for context
-- Use syntax-aware splitting for code files
+**Mejores prácticas:**
+- Preservar fronteras semánticas (no dividir a mitad de frase/sección)
+- Incluir metadatos del documento padre (título, fuente, autor)
+- Solapar chunks ligeramente (20-50 tokens) para contexto
+- Usar división syntax-aware para archivos de código
 
-**Azure AI Search: Built-in Chunking**
+**Azure AI Search: Chunking integrado**
 ```bicep
-// In knowledge sources (agentic retrieval), 
-// chunking is auto-generated with intelligent defaults
+// En knowledge sources (retrieval agéntico),
+// el chunking se auto-genera con defaults inteligentes
 ```
 
 ---
 
-#### 2. **Vectorization**
+#### 2. **Vectorización**
 
-**Problem:**  
-Keyword search fails on conceptual queries. "PTO policy" and "time off" are semantically identical but textually different.
+**Problema:**  
+La búsqueda por keywords falla en consultas conceptuales. "Política PTO" y "días libres" son semánticamente idénticos pero textualmente diferentes.
 
-**Solution:**  
-Create embeddings (vector representations) for every chunk.
+**Solución:**  
+Crear embeddings (representaciones vectoriales) para cada chunk.
 
 ```
-Chunk Text: "Time off policy allows 30 days annually"
+Texto del chunk: "La política de días libres permite 30 días anuales"
     ↓
-Embedding Model: Azure OpenAI (text-embedding-3-small)
+Modelo de embeddings: Azure OpenAI (text-embedding-3-small)
     ↓
-Vector: [0.234, -0.891, 0.123, ..., 0.567]  (dimension: 1536)
+Vector: [0.234, -0.891, 0.123, ..., 0.567]  (dimensión: 1536)
     ↓
-Stored in search index alongside text
+Almacenado en el índice de búsqueda junto al texto
 ```
 
-**Query Time:**
+**En tiempo de consulta:**
 ```
-User Query: "PTO policy"
+Consulta del usuario: "Política PTO"
     ↓
-Generate embedding: [0.245, -0.885, 0.131, ..., 0.571]
+Generar embedding: [0.245, -0.885, 0.131, ..., 0.571]
     ↓
-Find similar vectors (cosine similarity)
+Encontrar vectores similares (similitud coseno)
     ↓
-Retrieve relevant chunks
+Recuperar chunks relevantes
 ```
 
-**Best Practices:**
-- Use Azure OpenAI embeddings (or Azure Vision for images)
-- Keep embedding model consistent (don't switch mid-project)
-- Dimension trade-offs: Higher dims = better accuracy, higher cost
-- Multilingual embeddings support 50+ languages
+**Mejores prácticas:**
+- Usar embeddings de Azure OpenAI (o Azure Vision para imágenes)
+- Mantener el modelo de embeddings consistente (no cambiar a mitad de proyecto)
+- Trade-offs de dimensión: Mayor dims = mejor precisión, mayor coste
+- Embeddings multilingüe soportan 50+ idiomas
 
 ---
 
-#### 3. **Metadata Extraction**
+#### 3. **Extracción de metadatos**
 
-**Problem:**  
-Search results lack context. User doesn't know where information came from.
+**Problema:**  
+Los resultados de búsqueda carecen de contexto. El usuario no sabe de dónde viene la información.
 
-**Solution:**  
-Extract and store metadata with each chunk:
+**Solución:**  
+Extraer y almacenar metadatos con cada chunk:
 
 ```json
 {
   "id": "chunk-123",
-  "content": "Time off policy allows 30 days annually...",
+  "content": "La política de días libres permite 30 días anuales...",
   "metadata": {
     "source_document": "HR_Handbook_2024.pdf",
-    "source_section": "2.1: PTO Policy - General",
+    "source_section": "2.1: Política PTO - General",
     "page_number": 12,
-    "author": "HR Department",
+    "author": "Departamento RRHH",
     "last_updated": "2024-01-15",
     "document_type": "policy",
     "applicable_to": ["remote", "onsite"]
@@ -313,14 +313,14 @@ Extract and store metadata with each chunk:
 }
 ```
 
-**Citation Generation:**
+**Generación de citas:**
 ```python
-# When generating response, include metadata
+# Al generar respuesta, incluir metadatos
 response = {
-  "answer": "The PTO policy allows 30 days annually...",
+  "answer": "La política PTO permite 30 días anuales...",
   "citations": [
     {
-      "text": "30 days annually",
+      "text": "30 días anuales",
       "source": "HR_Handbook_2024.pdf",
       "section": "2.1",
       "page": 12
@@ -331,13 +331,13 @@ response = {
 
 ---
 
-#### 4. **Language & Multilingual Support**
+#### 4. **Soporte multilingüe**
 
-**Problem:**  
-MENSADEF likely has Spanish documents. Standard keyword search doesn't understand Spanish stemming/lemmatization.
+**Problema:**  
+MENSADEF probablemente tiene documentos en español. La búsqueda por keywords estándar no entiende stemming/lematización en español.
 
-**Solution:**  
-Use appropriate language analyzers:
+**Solución:**  
+Usar analizadores de idioma apropiados:
 
 ```bicep
 resource searchIndex 'Microsoft.Search/searchServices/indexes@2023-11-01' = {
@@ -348,28 +348,28 @@ resource searchIndex 'Microsoft.Search/searchServices/indexes@2023-11-01' = {
         name: 'content'
         type: 'Edm.String'
         searchable: true
-        analyzer: 'es.microsoft'  // Spanish analyzer
+        analyzer: 'es.microsoft'  // Analizador español
       }
     ]
   }
 }
 ```
 
-**Analyzer Options:**
-- `es.microsoft` - Spanish (Microsoft analyzer)
-- `en.microsoft` - English (Microsoft analyzer)
-- `es.lucene` - Spanish (Lucene analyzer)
-- More than 50 language analyzers available
+**Opciones de analizador:**
+- `es.microsoft` - Español (analizador Microsoft)
+- `en.microsoft` - Inglés (analizador Microsoft)
+- `es.lucene` - Español (analizador Lucene)
+- Más de 50 analizadores de idioma disponibles
 
 ---
 
-#### 5. **OCR for PDFs & Images**
+#### 5. **OCR para PDFs e imágenes**
 
-**Problem:**  
-PDFs and images contain text that can't be indexed without OCR.
+**Problema:**  
+PDFs e imágenes contienen texto que no puede indexarse sin OCR.
 
-**Solution:**  
-Azure AI Search has built-in OCR (via skills pipeline):
+**Solución:**  
+Azure AI Search tiene OCR integrado (vía pipeline de skills):
 
 ```bicep
 resource ocrSkill 'Microsoft.Search/searchServices/skillsets@2023-11-01' = {
@@ -379,7 +379,7 @@ resource ocrSkill 'Microsoft.Search/searchServices/skillsets@2023-11-01' = {
       {
         '@odata.type': '#Microsoft.Skills.Vision.OcrSkill'
         context: '/document/normalized_images/*'
-        textExtractionAlgorithm: 'printed'  // or 'handwritten'
+        textExtractionAlgorithm: 'printed'  // o 'handwritten'
         lineEnding: 'space'
       }
     ]
@@ -389,46 +389,46 @@ resource ocrSkill 'Microsoft.Search/searchServices/skillsets@2023-11-01' = {
 
 ---
 
-### Content Preparation Checklist
+### Checklist de preparación de contenido
 
-- [ ] **Large documents:** Split into chunks (200-500 tokens each)
-- [ ] **Vectorization:** All chunks have embeddings
-- [ ] **Metadata:** Source, date, author, document type extracted
-- [ ] **Language:** Appropriate analyzer configured
-- [ ] **PDFs/Images:** OCR applied
-- [ ] **Synonyms:** Synonym maps for terminology mismatches (PTO = "time off", "vacation days")
-- [ ] **Filters:** Document-level security metadata included
-- [ ] **Scoring:** Key fields boosted (title > body)
-- [ ] **Testing:** Search quality validated on sample queries
+- [ ] **Documentos grandes:** Divididos en chunks (200-500 tokens cada uno)
+- [ ] **Vectorización:** Todos los chunks tienen embeddings
+- [ ] **Metadatos:** Fuente, fecha, autor, tipo de documento extraídos
+- [ ] **Idioma:** Analizador apropiado configurado
+- [ ] **PDFs/Imágenes:** OCR aplicado
+- [ ] **Sinónimos:** Mapas de sinónimos para diferencias terminológicas (PTO = "días libres", "vacaciones")
+- [ ] **Filtros:** Metadatos de seguridad a nivel documento incluidos
+- [ ] **Scoring:** Campos clave potenciados (título > cuerpo)
+- [ ] **Testing:** Calidad de búsqueda validada con consultas de ejemplo
 
 ---
 
-## Relevance Tuning
+## Ajuste de relevancia
 
-### 1. Hybrid Queries (Keyword + Vector)
+### 1. Consultas híbridas (Keyword + Vector)
 
-**Classic approach:** Keyword search ONLY (BM25)
+**Enfoque clásico:** SOLO búsqueda por keywords (BM25)
 ```
-Query: "PTO policy"
-Results: Exact phrase matches only
-Problem: Misses "vacation days", "time off", "leave policy"
-```
-
-**Better approach:** Hybrid search (keyword + vector)
-```
-Query: "PTO policy"
-    ├─► Keyword search: "PTO policy", "time off", "vacation"
-    └─► Vector search: Semantically similar content
-Result: Combines best of both (high recall + high precision)
+Consulta: "Política PTO"
+Resultados: Solo coincidencias exactas de frase
+Problema: No encuentra "días de vacaciones", "días libres", "política de ausencias"
 ```
 
-**Implementation:**
+**Mejor enfoque:** Búsqueda híbrida (keyword + vector)
+```
+Consulta: "Política PTO"
+    ├─► Búsqueda keyword: "política PTO", "días libres", "vacaciones"
+    └─► Búsqueda vectorial: Contenido semánticamente similar
+Resultado: Combina lo mejor de ambos (alto recall + alta precisión)
+```
+
+**Implementación:**
 ```python
 from azure.search.documents.models import HybridSearch, VectorizedQuery
 
 results = client.search(
-    search_text="PTO policy",  # Keyword component
-    vector_queries=[VectorizedQuery(...)],  # Vector component
+    search_text="Política PTO",  # Componente keyword
+    vector_queries=[VectorizedQuery(...)],  # Componente vectorial
     select=["title", "content"],
     top=5,
     semantic_configuration_name="default"
@@ -437,36 +437,36 @@ results = client.search(
 
 ---
 
-### 2. Semantic Ranking
+### 2. Ranking semántico
 
-**Problem:**  
-Top results from hybrid search might not be semantically relevant.
-
-```
-Top 3 Results:
-1. "Company PTO policy (50 pages)" - High keyword match, low relevance
-2. "Remote work benefits guide" - Lower match, high relevance
-3. "Payroll processing manual" - Medium match, no relevance
-```
-
-**Solution:**  
-Re-rank results using semantic ranking (cross-encoder model):
+**Problema:**  
+Los resultados top de búsqueda híbrida pueden no ser semánticamente relevantes.
 
 ```
-Original Ranking (BM25 score):
-1. "Company PTO policy" - Score: 8.5
-2. "Remote work benefits" - Score: 7.2
-3. "Payroll manual" - Score: 6.1
-
-After Semantic Re-ranking:
-1. "Remote work benefits" - Semantic score: 2.8 (most relevant)
-2. "Company PTO policy" - Semantic score: 2.1
-3. "Payroll manual" - Semantic score: 0.4
+Top 3 Resultados:
+1. "Política PTO de la empresa (50 páginas)" - Alta coincidencia keyword, baja relevancia
+2. "Guía de beneficios trabajo remoto" - Menor coincidencia, alta relevancia
+3. "Manual de procesamiento nóminas" - Coincidencia media, sin relevancia
 ```
 
-**Implementation:**
+**Solución:**  
+Re-rankear resultados usando ranking semántico (modelo cross-encoder):
+
+```
+Ranking original (score BM25):
+1. "Política PTO empresa" - Score: 8.5
+2. "Beneficios trabajo remoto" - Score: 7.2
+3. "Manual nóminas" - Score: 6.1
+
+Después de re-ranking semántico:
+1. "Beneficios trabajo remoto" - Score semántico: 2.8 (más relevante)
+2. "Política PTO empresa" - Score semántico: 2.1
+3. "Manual nóminas" - Score semántico: 0.4
+```
+
+**Implementación:**
 ```bicep
-// Enable in search index
+// Habilitar en el índice de búsqueda
 semanticConfiguration: {
   name: 'default'
   prioritizedFields: {
@@ -478,21 +478,21 @@ semanticConfiguration: {
 
 ---
 
-### 3. Scoring Profiles
+### 3. Perfiles de scoring
 
-**Problem:**  
-Some fields are more important than others.
+**Problema:**  
+Algunos campos son más importantes que otros.
 
 ```
-User query: "PTO policy"
-Results:
-- Match in title (policy document) - Should rank higher
-- Match in body (mentions PTO once) - Should rank lower
-- Match in footnote (stray reference) - Should rank lowest
+Consulta del usuario: "Política PTO"
+Resultados:
+- Coincidencia en título (documento de política) - Debería rankear más alto
+- Coincidencia en cuerpo (menciona PTO una vez) - Debería rankear más bajo
+- Coincidencia en nota al pie (referencia suelta) - Debería rankear lo más bajo
 ```
 
-**Solution:**  
-Apply scoring profiles to boost key fields:
+**Solución:**  
+Aplicar perfiles de scoring para potenciar campos clave:
 
 ```bicep
 scoringProfiles: [
@@ -500,16 +500,16 @@ scoringProfiles: [
     name: 'relevanceProfile'
     textWeights: {
       weights: {
-        'title': 3          // Title matches rank 3x higher
-        'content': 1        // Body matches - neutral
-        'metadata': 0.5     // Metadata matches - lower weight
+        'title': 3          // Coincidencias en título rankean 3x más alto
+        'content': 1        // Coincidencias en cuerpo - neutral
+        'metadata': 0.5     // Coincidencias en metadatos - menor peso
       }
     }
     functions: [
       {
         fieldName: 'last_updated'
         type: 'freshness'
-        freshness: { boostingDurationInDays: 90 }  // Boost recent docs
+        freshness: { boostingDurationInDays: 90 }  // Potenciar docs recientes
       }
     ]
   }
@@ -518,213 +518,213 @@ scoringProfiles: [
 
 ---
 
-### 4. Vector Search Parameters
+### 4. Parámetros de búsqueda vectorial
 
-**Vector Weighting in Hybrid Queries:**
+**Ponderación vectorial en consultas híbridas:**
 ```python
-# Default: 50% keyword + 50% vector
+# Por defecto: 50% keyword + 50% vector
 results = client.search(
-    search_text="query",
+    search_text="consulta",
     vector_queries=[
       VectorizedQuery(
         vector=embedding,
         k_nearest_neighbors=5,
-        weight: 0.8  # 80% weight on vector search
+        weight: 0.8  # 80% peso en búsqueda vectorial
       )
     ],
-    # Top 5 keyword results + top 5 vector results
-    # Re-ranked by hybrid score
+    # Top 5 resultados keyword + top 5 resultados vector
+    # Re-rankeados por score híbrido
 )
 ```
 
-**Minimum Thresholds:**
+**Umbrales mínimos:**
 ```python
-# Exclude low-scoring results
+# Excluir resultados con score bajo
 results = client.search(
-    search_text="query",
+    search_text="consulta",
     vector_queries=[VectorizedQuery(...)],
-    filter="search.score(any()) > 0.5"  # Only results with score > 0.5
+    filter="search.score(any()) > 0.5"  # Solo resultados con score > 0.5
 )
 ```
 
 ---
 
-## Query Understanding & Sub-Query Planning
+## Comprensión de consultas y planificación de sub-consultas
 
-### Agentic Retrieval: Multi-Query Strategy
+### Retrieval agéntico: Estrategia multi-consulta
 
-**Problem:**  
-User asks complex question that can't be answered with single query.
+**Problema:**  
+El usuario hace una pregunta compleja que no puede responderse con una sola consulta.
 
-**User Query:**
+**Consulta del usuario:**
 > "¿Cuáles son las políticas de vacaciones para empleados remotos contratados después de 2023 que trabajan en el sector de Defensa?"
 
-**Traditional RAG:**
-Single query → Single result set → Single answer
-(Likely misses important context)
+**RAG tradicional:**
+Una consulta → Un conjunto de resultados → Una respuesta
+(Probablemente pierde contexto importante)
 
-**Agentic Retrieval:**
-LLM breaks down question → Multiple focused sub-queries → Parallel search
+**Retrieval agéntico:**
+LLM descompone la pregunta → Múltiples sub-consultas enfocadas → Búsqueda paralela
 
 ```
-Original Query:
+Consulta original:
 "¿Cuáles son las políticas de vacaciones para empleados remotos 
  contratados después de 2023 que trabajan en el sector de Defensa?"
     ↓
-LLM Sub-query Generation (using conversation history for context)
-    ├─► Sub-query 1: "Políticas de vacaciones empleados remotos"
-    ├─► Sub-query 2: "Requisitos para empleados nuevos 2023"
-    └─► Sub-query 3: "Especificaciones sector Defensa"
+Generación de sub-consultas por LLM (usando historial de conversación para contexto)
+    ├─► Sub-consulta 1: "Políticas de vacaciones empleados remotos"
+    ├─► Sub-consulta 2: "Requisitos para empleados nuevos 2023"
+    └─► Sub-consulta 3: "Especificaciones sector Defensa"
     ↓
-Parallel Search Execution (much faster than sequential!)
-    ├─► Search 1: Results [chunk-1, chunk-2, chunk-3, ...]
-    ├─► Search 2: Results [chunk-4, chunk-5, chunk-6, ...]
-    └─► Search 3: Results [chunk-7, chunk-8, chunk-9, ...]
+Ejecución de búsqueda paralela (¡mucho más rápido que secuencial!)
+    ├─► Búsqueda 1: Resultados [chunk-1, chunk-2, chunk-3, ...]
+    ├─► Búsqueda 2: Resultados [chunk-4, chunk-5, chunk-6, ...]
+    └─► Búsqueda 3: Resultados [chunk-7, chunk-8, chunk-9, ...]
     ↓
-Semantic Re-ranking (all results)
-    └─► Top 5 most relevant across all searches
+Re-ranking semántico (todos los resultados)
+    └─► Top 5 más relevantes de todas las búsquedas
     ↓
-Answer Synthesis
-    └─► LLM formulates comprehensive answer with citations
+Síntesis de respuesta
+    └─► LLM formula respuesta comprensiva con citas
 ```
 
 ---
 
-## Security: Document-Level Access Control
+## Seguridad: Control de acceso a nivel documento
 
-### Scenario
+### Escenario
 
 ```
-Executive asks: "What's our current spending on IT contractors?"
+Ejecutivo pregunta: "¿Cuál es nuestro gasto actual en contratistas IT?"
     ↓
-Without DLS: RAG returns Finance confidential data (RISK!)
+Sin DLS: RAG devuelve datos confidenciales de Finanzas (¡RIESGO!)
     ↓
-With DLS: Only Finance team sees Financial documents
-           Executive gets "No authorization for this data"
+Con DLS: Solo el equipo de Finanzas ve documentos financieros
+          El ejecutivo obtiene "Sin autorización para estos datos"
 ```
 
-### Implementation
+### Implementación
 
-**Index-time:**
+**En tiempo de indexación:**
 ```json
 {
   "id": "finance-budget-2024",
-  "title": "Q1 2024 Budget Report",
+  "title": "Informe Presupuesto Q1 2024",
   "content": "...",
   "allowed_departments": ["Finance", "CFO-Office"],
   "allowed_users": ["cfo@company.com", "finance-manager@company.com"]
 }
 ```
 
-**Query-time:**
+**En tiempo de consulta:**
 ```python
-# User requesting document
-user = current_user()  # John (Finance team)
+# Usuario solicitando documento
+user = current_user()  # John (equipo Finanzas)
 user_departments = ["Finance"]
 
-# Apply security filter
+# Aplicar filtro de seguridad
 filter_expression = f"""
   allowed_departments/any(d: search.in(d, '{','.join(user_departments)}'))
   OR allowed_users/any(u: search.in(u, '{user.email}'))
 """
 
 results = client.search(
-    search_text="budget",
+    search_text="presupuesto",
     filter=filter_expression
 )
 ```
 
 ---
 
-## Performance Tuning Checklist
+## Checklist de ajuste de rendimiento
 
-- [ ] **Hybrid queries enabled** (keyword + vector)
-- [ ] **Semantic ranking enabled** (cross-encoder re-scoring)
-- [ ] **Scoring profiles applied** (boost key fields)
-- [ ] **Vector search tuned** (weighting, minimum thresholds)
-- [ ] **Top-k results limited** (top: 5-10, not 100)
-- [ ] **Filters optimized** (narrow result set before ranking)
-- [ ] **Replicas scaled** (1+ for multi-user scenarios)
-- [ ] **Query timeouts configured** (default: 30s)
-- [ ] **Caching for frequent queries** (if applicable)
+- [ ] **Consultas híbridas habilitadas** (keyword + vector)
+- [ ] **Ranking semántico habilitado** (re-scoring cross-encoder)
+- [ ] **Perfiles de scoring aplicados** (potenciar campos clave)
+- [ ] **Búsqueda vectorial ajustada** (ponderación, umbrales mínimos)
+- [ ] **Resultados top-k limitados** (top: 5-10, no 100)
+- [ ] **Filtros optimizados** (estrechar resultados antes de rankear)
+- [ ] **Réplicas escaladas** (1+ para escenarios multi-usuario)
+- [ ] **Timeouts de consulta configurados** (por defecto: 30s)
+- [ ] **Caché para consultas frecuentes** (si aplica)
 
 ---
 
-## Cost Optimization
+## Optimización de costes
 
-### Tier Selection
+### Selección de tier
 
-| Use Case | OpenAI Tier | Search Tier | Cost/Month |
+| Caso de uso | Tier OpenAI | Tier Search | Coste/Mes |
 |----------|-------------|------------|-----------|
-| Development/Testing | S0 | Standard 1 replica | $1,450 |
-| Production (HA) | S1 | Standard 2-3 replicas | $2,800 |
-| High-volume | S1 | Premium | $4,500+ |
+| Desarrollo/Testing | S0 | Standard 1 réplica | $1,450 |
+| Producción (HA) | S1 | Standard 2-3 réplicas | $2,800 |
+| Alto volumen | S1 | Premium | $4,500+ |
 
-### Strategies
+### Estrategias
 
-1. **Use cheaper models** (gpt-4o vs gpt-4o)
-2. **Optimize embedding dimension** (1024 vs 1536)
-3. **Reduce Search replicas** (for non-critical environments)
-4. **Set App Insights retention** (30 days vs 90 days)
-5. **Enable result sampling** (if accurate metrics not critical)
-
----
-
-## Monitoring & Observability
-
-### Key Metrics
-
-```
-Application Insights Dashboard
-
-Query Performance:
-├─ Latency (e2e) - Target: < 5 seconds
-├─ Search latency - Target: < 1 second
-├─ OpenAI inference latency - Target: < 2 seconds
-└─ P95 latency - Target: < 10 seconds
-
-Relevance:
-├─ Average relevance score
-├─ Citation count per answer
-└─ Follow-up suggestion click rate
-
-Cost:
-├─ Cost per query
-├─ Daily/monthly cost trend
-└─ Cost breakdown by model
-
-Errors:
-├─ Error rate (%)
-├─ Top error types
-└─ Recovery success rate
-```
+1. **Usar modelos más baratos** (gpt-4o-mini vs gpt-4o)
+2. **Optimizar dimensión de embeddings** (1024 vs 1536)
+3. **Reducir réplicas de Search** (para entornos no críticos)
+4. **Configurar retención App Insights** (30 días vs 90 días)
+5. **Habilitar muestreo de resultados** (si métricas exactas no son críticas)
 
 ---
 
-## Summary: Agentic Retrieval vs Classic RAG
+## Monitorización y observabilidad
 
-| Aspect | Agentic Retrieval | Classic RAG |
+### Métricas clave
+
+```
+Dashboard Application Insights
+
+Rendimiento de consultas:
+├─ Latencia (e2e) - Objetivo: < 5 segundos
+├─ Latencia de búsqueda - Objetivo: < 1 segundo
+├─ Latencia inferencia OpenAI - Objetivo: < 2 segundos
+└─ Latencia P95 - Objetivo: < 10 segundos
+
+Relevancia:
+├─ Score de relevancia promedio
+├─ Conteo de citas por respuesta
+└─ Tasa de clic en sugerencias de seguimiento
+
+Costes:
+├─ Coste por consulta
+├─ Tendencia de coste diario/mensual
+└─ Desglose de coste por modelo
+
+Errores:
+├─ Tasa de error (%)
+├─ Tipos de error principales
+└─ Tasa de éxito de recuperación
+```
+
+---
+
+## Resumen: Retrieval Agéntico vs RAG Clásico
+
+| Aspecto | Retrieval Agéntico | RAG Clásico |
 |--------|-----------------|------------|
-| **Best For** | Agents, chatbots, complex queries | Simple, GA-only scenarios |
-| **Query Planning** | LLM-assisted (sub-queries) | Single query |
-| **Execution** | Parallel sub-queries | Single request |
-| **Response** | Structured (citations, metadata) | Flat result set |
-| **Relevance** | Highest (multi-faceted) | Good (single query) |
-| **Speed** | Moderate (multiple searches) | Fast (one request) |
-| **Maturity** | Preview (new features) | GA (stable) |
-| **Cost** | Slightly higher (more queries) | Lower (single query) |
+| **Mejor para** | Agentes, chatbots, consultas complejas | Escenarios simples, solo GA |
+| **Planificación consultas** | Asistida por LLM (sub-consultas) | Consulta única |
+| **Ejecución** | Sub-consultas paralelas | Petición única |
+| **Respuesta** | Estructurada (citas, metadatos) | Conjunto plano de resultados |
+| **Relevancia** | Máxima (multi-facetada) | Buena (consulta única) |
+| **Velocidad** | Moderada (múltiples búsquedas) | Rápida (una petición) |
+| **Madurez** | Preview (features nuevos) | GA (estable) |
+| **Coste** | Ligeramente mayor (más consultas) | Menor (consulta única) |
 
-**Recommendation for MENSADEF:**
-- **New implementations:** Use Agentic Retrieval
-- **Existing systems:** Consider migrating to agentic retrieval for accuracy gains
-- **Hybrid:** Some teams use both (classic for simple Q&A, agentic for complex analysis)
+**Recomendación para MENSADEF:**
+- **Implementaciones nuevas:** Usar Retrieval Agéntico
+- **Sistemas existentes:** Considerar migrar a retrieval agéntico para ganancias de precisión
+- **Híbrido:** Algunos equipos usan ambos (clásico para Q&A simple, agéntico para análisis complejo)
 
 ---
 
-## References
+## Referencias
 
-- 📚 [RAG Overview (Microsoft Learn)](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview)
-- 🔍 [Hybrid Search](https://learn.microsoft.com/en-us/azure/search/hybrid-search-overview)
-- ⭐ [Semantic Ranking](https://learn.microsoft.com/en-us/azure/search/semantic-ranking)
-- 🏗️ [ARCHITECTURE.md](ARCHITECTURE.md)
-- 📋 [AGENTS.md](AGENTS.md)
+- 📚 [Visión general RAG (Microsoft Learn)](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview)
+- 🔍 [Búsqueda híbrida](https://learn.microsoft.com/en-us/azure/search/hybrid-search-overview)
+- ⭐ [Ranking semántico](https://learn.microsoft.com/en-us/azure/search/semantic-ranking)
+- 🏗️ [README - Arquitectura](README.md)
+- 📋 [Agentes](.github/agents/)

@@ -1,24 +1,24 @@
-# RAG Query CLI — Interactive Document Search
+# RAG Query CLI — Búsqueda Interactiva de Documentos
 
-**Query your RAG system interactively from the command line.**
+**Consulta tu sistema RAG interactivamente desde línea de comandos.**
 
-## Overview
+## Descripción General
 
-Interactive CLI for searching and querying documents indexed in your RAG system using Azure AI Search + Azure OpenAI.
+CLI interactivo para buscar y consultar documentos indexados en tu sistema RAG usando Azure AI Search + Azure OpenAI.
 
-## Features
+## Características
 
-- ✅ Hybrid search (keyword + semantic ranking)
-- ✅ Document retrieval with source tracking
-- ✅ Response generation with context
-- ✅ Performance metrics
-- ✅ Handles UTF-8 special characters (Windows compatible)
+- Búsqueda híbrida (keyword + ranking semántico)
+- Recuperación de documentos con seguimiento de fuentes
+- Generación de respuestas con contexto
+- Métricas de rendimiento
+- Manejo de caracteres especiales UTF-8 (compatible Windows)
 
-## Requirements
+## Requisitos
 
-- Azure OpenAI account with deployed model
-- Azure AI Search instance with indexed documents
-- `.env` file with credentials:
+- Cuenta Azure OpenAI con modelo desplegado
+- Instancia Azure AI Search con documentos indexados
+- Archivo `.env` con credenciales:
   - `AZURE_OPENAI_KEY`
   - `AZURE_OPENAI_ENDPOINT`
   - `AZURE_SEARCH_ENDPOINT`
@@ -26,36 +26,36 @@ Interactive CLI for searching and querying documents indexed in your RAG system 
   - `AZURE_SEARCH_INDEX`
   - `AZURE_OPENAI_MODEL`
 
-## Installation
+## Instalación
 
 ```bash
-# Dependencies are in ../.../requirements.txt
+# Dependencias en ../.../requirements.txt
 pip install -r .github/requirements.txt
 ```
 
-## Usage
+## Uso
 
-### Interactive Query (Recommended)
+### Consulta Interactiva (Recomendado)
 
 ```bash
-# From project root
-python .github/skills/rag-query-cli/consultar.py "Your question here"
+# Desde la raíz del proyecto
+python .github/skills/rag-query-cli/consultar.py "Tu pregunta aquí"
 
-# Example
+# Ejemplo
 python .github/skills/rag-query-cli/consultar.py "What is the user onboarding process?"
 ```
 
-### Direct Execution
+### Ejecución Directa
 
 ```python
 from consultar import RAGExecutor
 
 executor = RAGExecutor()
-result = executor.execute("your question", verbose=True)
+result = executor.execute("tu pregunta", verbose=True)
 
 print(result['response'])
-print("Sources:", result['sources'])
-print("Metrics:", result['metrics'])
+print("Fuentes:", result['sources'])
+print("Métricas:", result['metrics'])
 ```
 
 ## Output
@@ -63,14 +63,14 @@ print("Metrics:", result['metrics'])
 ```
 [QUERY] What is the user onboarding process?
 
-[SEARCHING] Searching documents...
-[OK] Found 5 relevant documents
+[SEARCHING] Buscando documentos...
+[OK] Encontrados 5 documentos relevantes
 
-[GENERATING] Generating response...
-[OK] Response generated
+[GENERATING] Generando respuesta...
+[OK] Respuesta generada
 
 [RESPONSE]
-Based on the documentation, the user onboarding process involves...
+Basado en la documentación, el proceso de onboarding de usuario implica...
 
 [SOURCES]
    - knowledge/pdfs/Onboarding_Manual.pdf
@@ -83,50 +83,18 @@ Based on the documentation, the user onboarding process involves...
    Tokens: 412
 ```
 
-## Advanced Options
+## Opciones Avanzadas
 
-### Custom Top-K Results
-
-```bash
-# Retrieve more context (default is 5)
-python .github/skills/rag-query-cli/consultar.py "question" --top 10
-```
-
-### Quiet Mode
+### Top-K Personalizado
 
 ```bash
-# Only output the response
-python .github/skills/rag-query-cli/consultar.py "question" --quiet
+# Recuperar más contexto (por defecto es 5)
+python .github/skills/rag-query-cli/consultar.py "pregunta" --top 10
 ```
 
-## Search Modes
+### Modo Silencioso
 
-- **Hybrid (Default)**: Keyword search with BM25 + Semantic ranking (best for most queries)
-- **Keyword**: Fast, good for exact matches
-- **Semantic**: Better understanding of meaning, slower
-
-## Troubleshooting
-
-| Issue | Solution |
-|---|---|
-| `Missing AZURE_OPENAI_KEY` | Fill in `.env` with your credentials |
-| `No relevant documents found` | Index documents first with `rag-indexer` skill |
-| `Semantic ranking not available` | Falls back to keyword search automatically |
-| Unicode errors on Windows | Script auto-fixes UTF-8 encoding |
-
-## Performance Notes
-
-- First query may take 2-3 seconds (model warm-up)
-- Subsequent queries: 500ms - 2 seconds
-- Inference time depends on model (GPT-5 faster than Claude)
-
-## Related Skills
-
-- [`rag-indexer`](../rag-indexer/SKILL.md) — Index documents
-- [`rag-diagnostics`](../rag-diagnostics/SKILL.md) — Check system health
-- [`rag-api-server`](../rag-api-server/SKILL.md) — REST API wrapper
-
-## See Also
-
-- [.github/README.md](../../README.md) — Main architecture
-- [.github/STANDALONE_GUIDE.md](../../STANDALONE_GUIDE.md) — Project setup
+```bash
+# Solo output de la respuesta
+python .github/skills/rag-query-cli/consultar.py "pregunta" --quiet
+```

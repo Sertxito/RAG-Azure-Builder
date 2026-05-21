@@ -1,52 +1,52 @@
-# RAG Storage Connector — Azure Blob Integration
+# RAG Storage Connector — Integración Azure Blob
 
-**PowerShell-based helper for Azure Blob Storage credentials.**
+**Helper basado en PowerShell para credenciales de Azure Blob Storage.**
 
-> ℹ️ This skill is **PowerShell-only** (no Python). It's a thin helper for fetching
-> connection strings via Azure CLI. Document indexing/upload happens in `rag-indexer`
-> (which can read from local folders or, with credentials from here, from Blob).
+> Este skill es **solo PowerShell** (sin Python). Es un helper ligero para obtener
+> connection strings via Azure CLI. La indexación/upload de documentos ocurre en `rag-indexer`
+> (que puede leer de carpetas locales o, con credenciales de aquí, desde Blob).
 
-## Overview
+## Descripción General
 
-Helper utilities for Azure Blob Storage integration, used by indexers and document upload pipelines.
+Utilidades helper para integración con Azure Blob Storage, usadas por indexers y pipelines de upload de documentos.
 
-## Features
+## Características
 
-- ✅ Connection string management
-- ✅ Account/container listing
-- ✅ PowerShell/Bash compatibility
-- ✅ Credential helpers
+- Gestión de connection strings
+- Listado de cuentas/contenedores
+- Compatibilidad PowerShell/Bash
+- Helpers de credenciales
 
-## Requirements
+## Requisitos
 
-- Azure Storage account
-- `.env` or Azure CLI credentials
+- Cuenta de Azure Storage
+- `.env` o credenciales Azure CLI
 
-## Usage
+## Uso
 
-### Get Connection String (PowerShell)
+### Obtener Connection String (PowerShell)
 
 ```powershell
-# From project root
+# Desde la raíz del proyecto
 . .github/skills/rag-storage-connector/conexion-storage.ps1
 
-# This outputs connection string to paste into .env
+# Esto muestra el connection string para pegar en .env
 ```
 
-### In Environment
+### En Environment
 
-Add to `.env`:
+Añadir a `.env`:
 ```
 AZURE_STORAGE_ACCOUNT=mystorageaccount
 AZURE_STORAGE_KEY=<key-from-above>
 AZURE_STORAGE_CONTAINER=documents
 ```
 
-## Related Skills
+## Skills Relacionados
 
-- [`rag-indexer`](../rag-indexer/SKILL.md) — Uses storage for document sources
-- [`rag-api-server`](../rag-api-server/SKILL.md) — Upload endpoint
+- [`rag-indexer`](../rag-indexer/SKILL.md) — Usa storage como fuente de documentos
+- [`rag-api-server`](../rag-api-server/SKILL.md) — Endpoint de upload
 
-## See Also
+## Ver También
 
-- [.github/README.md](../../README.md) — Architecture
+- [.github/README.md](../../README.md) — Arquitectura

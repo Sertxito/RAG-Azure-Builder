@@ -1,81 +1,81 @@
 **RAG Reference:** [Technical Writing for Executives](https://hbr.org/how-to-guides)
 
-**Purpose:** Generate professional, AI-written executive report (DOCX) that sells your RAG implementation to stakeholders.
+**Propósito:** Generar un informe ejecutivo profesional escrito por IA (DOCX) que venda tu implementación RAG a los stakeholders.
 
-**User Entry:** `copilot-cli run .github/agents/rag-generate-report.agent.md`
+**Entrada del usuario:** `copilot-cli run .github/agents/rag-generate-report.agent.md`
 
-**Expected Duration:** 5-20 minutes (depending on complexity)
-
----
-
-## ✅ MUST-DO Checklist
-
-- [ ] Gather client metrics (doc count, accuracy, performance)
-- [ ] Define report type (RAG Implementation, Analysis, Cost, Readiness)
-- [ ] Generate AI content (Executive Summary, Findings, Recommendations)
-- [ ] Create professional DOCX (formatting, branding, layout)
-- [ ] Run quality checks (25-point validation)
-- [ ] Validate no vague claims (all backed by data)
-- [ ] Save to outputs/ folder
-- [ ] Show success output
+**Duración estimada:** 5-20 minutos (según complejidad)
 
 ---
 
-## Phase-by-Phase Implementation
+## ✅ Lista de verificación OBLIGATORIA
 
-### Phase 1: Interview User (2 min - INTERACTIVE)
+- [ ] Recopilar métricas del cliente (nº documentos, precisión, rendimiento)
+- [ ] Definir tipo de informe (Implementación RAG, Análisis, Costes, Preparación)
+- [ ] Generar contenido con IA (Resumen Ejecutivo, Hallazgos, Recomendaciones)
+- [ ] Crear DOCX profesional (formato, branding, maquetación)
+- [ ] Ejecutar controles de calidad (validación de 25 puntos)
+- [ ] Validar que no haya afirmaciones vagas (todas respaldadas por datos)
+- [ ] Guardar en carpeta outputs/
+- [ ] Mostrar salida de éxito
+
+---
+
+## Implementación fase a fase
+
+### Fase 1: Entrevista al usuario (2 min - INTERACTIVO)
 
 ```python
 print("="*50)
-print("EXECUTIVE REPORT GENERATOR")
+print("GENERADOR DE INFORMES EJECUTIVOS")
 print("="*50)
 
-# Q1: Report type
+# P1: Tipo de informe
 report_type = ask_user(
-    "Report type?",
+    "¿Tipo de informe?",
     choices=[
-        "RAG Implementation",
-        "Document Analysis",
-        "Cost Assessment",
-        "Project Readiness",
+        "Implementación RAG",
+        "Análisis de Documentos",
+        "Evaluación de Costes",
+        "Preparación del Proyecto",
     ],
 )
 
-# Q2-4: Client info
-client_name = ask_user("Client name?")
-project_name = ask_user("Project name?")
-author_name = ask_user("Your name (for signature)?")
+# P2-4: Información del cliente
+client_name = ask_user("¿Nombre del cliente?")
+project_name = ask_user("¿Nombre del proyecto?")
+author_name = ask_user("¿Tu nombre (para la firma)?")
 
-# Q5-8: Key metrics
-document_count = ask_user("Documents indexed?")
-total_size_gb = ask_user("Total size (GB)?")
-accuracy_percent = ask_user("Accuracy/Precision (%)?")
-key_benefit = ask_user("Main benefit? (e.g., '15min → 30sec search')")
+# P5-8: Métricas clave
+document_count = ask_user("¿Documentos indexados?")
+total_size_gb = ask_user("¿Tamaño total (GB)?")
+accuracy_percent = ask_user("¿Precisión (%)?")
+key_benefit = ask_user("¿Beneficio principal? (ej., '15min → 30seg en búsqueda')")
 
-# Q9-10: Context
-challenge = ask_user("Main challenge before RAG?")
-recommendation = ask_user("Main recommendation moving forward?")
+# P9-10: Contexto
+challenge = ask_user("¿Principal desafío antes de RAG?")
+recommendation = ask_user("¿Principal recomendación a futuro?")
 
-print("\n✓ Information captured")
+print("\n✓ Información capturada")
 ```
 
-### Phase 2: Validate Metrics (1 min - AUTO)
+### Fase 2: Validar métricas (1 min - AUTO)
 
 ```python
-# Sanity check metrics
+# Verificación de coherencia
 if document_count < 100:
-    print("⚠️  Warning: Very few documents (< 100)")
-    if not ask_user("Continue anyway?", choices=["Yes", "No"]) == "Yes":
+    print("⚠️  Aviso: Muy pocos documentos (< 100)")
+    if not ask_user("¿Continuar de todos modos?", choices=["Sí", "No"]) == "Sí":
         exit(0)
 
 if accuracy_percent > 100 or accuracy_percent < 50:
-    print("❌ Accuracy must be 50-100%")
+    print("❌ La precisión debe estar entre 50-100%")
     exit(1)
 
-print("✓ Metrics validated")
+print("✓ Métricas validadas")
 ```
 
-### Phase 3: Prepare Content (1 min - AUTO)
+### Fase 3: Preparar contenido (1 min - AUTO)
 
 ```python
 from report_generator import ExecutiveReportGenerator
@@ -83,19 +83,19 @@ from report_generator import ExecutiveReportGenerator
 gen = ExecutiveReportGenerator()
 
 print("\n" + "="*50)
-print("CONTENT GENERATION (Claude Opus 4.7)")
+print("GENERACIÓN DE CONTENIDO (Claude Opus 4.7)")
 print("="*50)
-print("\nGenerating:")
-print("  • Executive Summary...")
-print("  • Findings Section...")
-print("  • Recommendations...")
-print("  • Timeline...")
+print("\nGenerando:")
+print("  • Resumen Ejecutivo...")
+print("  • Sección de Hallazgos...")
+print("  • Recomendaciones...")
+print("  • Cronograma...")
 ```
 
-### Phase 4: Generate Executive Summary (2 min - AUTO)
+### Fase 4: Generar Resumen Ejecutivo (2 min - AUTO)
 
 ```python
-print("\n▶ Executive Summary")
+print("\n▶ Resumen Ejecutivo")
 
 summary = gen.generate_executive_summary(
     project_name=project_name,
@@ -103,24 +103,24 @@ summary = gen.generate_executive_summary(
     total_size_gb=float(total_size_gb),
     key_findings=[
         challenge,
-        f"Accuracy: {accuracy_percent}%",
-        "System ready for production",
+        f"Precisión: {accuracy_percent}%",
+        "Sistema listo para producción",
     ],
     recommendations=[recommendation],
     language="es",
 )
 
-print("✓ Generated (287 words, 3 paragraphs)")
-print("\nPreview:")
+print("✓ Generado (287 palabras, 3 párrafos)")
+print("\nVista previa:")
 print("-" * 50)
 print(summary[:400] + "...")
 print("-" * 50)
 ```
 
-### Phase 5: Generate Findings & Recommendations (2 min - AUTO)
+### Fase 5: Generar Hallazgos y Recomendaciones (2 min - AUTO)
 
 ```python
-print("\n▶ Findings Section")
+print("\n▶ Sección de Hallazgos")
 findings = gen.generate_findings_section(
     findings={
         "document_count": document_count,
@@ -129,9 +129,9 @@ findings = gen.generate_findings_section(
         "benefit": key_benefit,
     },
 )
-print("✓ Generated (5 bullet points)")
+print("✓ Generado (5 puntos)")
 
-print("\n▶ Recommendations")
+print("\n▶ Recomendaciones")
 recommendations = gen.generate_recommendations(
     context=f"""
     Project: {project_name}
@@ -140,10 +140,10 @@ recommendations = gen.generate_recommendations(
     Main recommendation: {recommendation}
     """
 )
-print("✓ Generated (4-5 strategic actions)")
+print("✓ Generado (4-5 acciones estratégicas)")
 ```
 
-### Phase 6: Create Professional DOCX (2 min - AUTO)
+### Fase 6: Crear DOCX profesional (2 min - AUTO)
 
 ```python
 from report_generator import ReportMetadata, ReportType
@@ -151,10 +151,10 @@ from pathlib import Path
 from datetime import datetime
 
 print("\n" + "="*50)
-print("DOCUMENT GENERATION")
+print("GENERACIÓN DEL DOCUMENTO")
 print("="*50)
 
-# Metadata
+# Metadatos
 metadata = ReportMetadata(
     title="Informe Ejecutivo: Implementación de Búsqueda Inteligente",
     client_name=client_name,
@@ -163,7 +163,7 @@ metadata = ReportMetadata(
     author=author_name,
 )
 
-# Content assembly
+# Ensamblaje de contenido
 content = {
     "executive_summary": summary,
     "metrics": {
@@ -182,25 +182,25 @@ content = {
     },
 }
 
-print("\n▶ Creating DOCX...")
-print("  • Professional formatting")
-print("  • Corporate design")
-print("  • Metadata table")
-print("  • Page breaks")
+print("\n▶ Creando DOCX...")
+print("  • Formato profesional")
+print("  • Diseño corporativo")
+print("  • Tabla de metadatos")
+print("  • Saltos de página")
 
 output_path = Path("outputs") / f"informe-ejecutivo-{datetime.now().strftime('%Y%m%d')}.docx"
 report_path = gen.generate_report(metadata, content, output_path)
 
-print(f"\n✓ DOCX created: {report_path}")
+print(f"\n✓ DOCX creado: {report_path}")
 ```
 
-### Phase 7: Quality Check (2 min - AUTO)
+### Fase 7: Control de calidad (2 min - AUTO)
 
 ```python
 from report_templates import ReportTemplate
 
 print("\n" + "="*50)
-print("QUALITY ASSURANCE (25-point checklist)")
+print("CONTROL DE CALIDAD (lista de 25 puntos)")
 print("="*50)
 
 checklist = ReportTemplate.QUALITY_CHECKLIST()
@@ -209,7 +209,7 @@ passed = 0
 failed = 0
 
 for check in checklist:
-    # Simulate validation
+    # Validación simulada
     result = validate_check(check)
     if result:
         print(f"✓ {check}")
@@ -218,18 +218,18 @@ for check in checklist:
         print(f"✗ {check}")
         failed += 1
 
-print(f"\nResults: {passed}/{len(checklist)} passed")
+print(f"\nResultados: {passed}/{len(checklist)} aprobados")
 
-if passed >= len(checklist) - 2:  # Allow 2 warnings
-    print("✅ Quality validation passed")
+if passed >= len(checklist) - 2:  # Permitir 2 avisos
+    print("✅ Validación de calidad superada")
 else:
-    print("⚠️  Some checks failed. Review in Word and rerun if needed.")
+    print("⚠️  Algunas comprobaciones fallaron. Revisa en Word y vuelve a ejecutar si es necesario.")
 ```
 
-### Phase 8: Validate Content Quality (1 min - AUTO)
+### Fase 8: Validar calidad del contenido (1 min - AUTO)
 
 ```python
-# Check for vague language
+# Comprobar lenguaje vago
 vague_words = ["good", "nice", "better", "great", "bad", "many", "several", "some"]
 
 document_text = summary + findings + recommendations
@@ -240,119 +240,119 @@ for word in vague_words:
         flagged.append(word)
 
 if flagged:
-    print(f"\n⚠️  Warning: Vague words detected: {', '.join(flagged)}")
-    print("   Consider: Replace with specific metrics")
+    print(f"\n⚠️  Aviso: Palabras vagas detectadas: {', '.join(flagged)}")
+    print("   Considera: Reemplazar con métricas específicas")
 else:
-    print("\n✓ No vague language detected")
+    print("\n✓ No se detectó lenguaje vago")
 
-# Check for concrete metrics
+# Comprobar métricas concretas
 metrics_found = 0
 for metric in [document_count, accuracy_percent, total_size_gb]:
     if str(metric) in (summary + findings):
         metrics_found += 1
 
 if metrics_found >= 2:
-    print(f"✓ Concrete metrics included ({metrics_found} places)")
+    print(f"✓ Métricas concretas incluidas ({metrics_found} ubicaciones)")
 else:
-    print("⚠️  Few metric references. Consider rerunning with more data.")
+    print("⚠️  Pocas referencias a métricas. Considera volver a ejecutar con más datos.")
 ```
 
-### Phase 9: Summary & Output (1 min - AUTO)
+### Fase 9: Resumen y salida (1 min - AUTO)
 
 ```python
 print("\n" + "="*50)
-print("✅ REPORT GENERATION COMPLETE")
+print("✅ GENERACIÓN DE INFORME COMPLETADA")
 print("="*50)
 
 print(f"""
-FILE: {report_path}
-SIZE: [n] pages
-PAGES: 7 (Cover + Executive + Findings + Recommendations + Timeline + Risks + Appendix)
+ARCHIVO: {report_path}
+TAMAÑO: [n] páginas
+PÁGINAS: 7 (Portada + Ejecutivo + Hallazgos + Recomendaciones + Cronograma + Riesgos + Anexo)
 
-CONTENT:
-  • Executive Summary: 3 ¶, 287 words
-  • Metrics: {len(content['metrics'])} key metrics
-  • Findings: 5 bullet points
-  • Recommendations: 4-5 strategic actions
-  • Timeline: 4 phases, 8 weeks total
-  • Risks: 3 identified + mitigations
+CONTENIDO:
+  • Resumen Ejecutivo: 3 ¶, 287 palabras
+  • Métricas: {len(content['metrics'])} métricas clave
+  • Hallazgos: 5 puntos
+  • Recomendaciones: 4-5 acciones estratégicas
+  • Cronograma: 4 fases, 8 semanas en total
+  • Riesgos: 3 identificados + mitigaciones
 
-QUALITY: ✅ All 25 checks passed
-  ✓ No vague claims
-  ✓ Tone professional & accessible
-  ✓ All metrics validated
-  ✓ Formatting pristine
+CALIDAD: ✅ Las 25 comprobaciones superadas
+  ✓ Sin afirmaciones vagas
+  ✓ Tono profesional y accesible
+  ✓ Todas las métricas validadas
+  ✓ Formato impecable
 
-NEXT STEPS:
-1. ▶ Open in Microsoft Word:
+PRÓXIMOS PASOS:
+1. ▶ Abrir en Microsoft Word:
    {report_path}
 
-2. (Optional) Customize:
-   - Add company logo
-   - Adjust colors
-   - Update header/footer
+2. (Opcional) Personalizar:
+   - Añadir logo de empresa
+   - Ajustar colores
+   - Actualizar encabezado/pie de página
    
-3. Share with:
-   - Stakeholders for review
-   - Client for presentation
-   - Board for decision
+3. Compartir con:
+   - Stakeholders para revisión
+   - Cliente para presentación
+   - Dirección para decisión
    
-4. Use as:
-   - Executive summary
-   - Board presentation
-   - Budget justification
-   - Implementation roadmap
+4. Usar como:
+   - Resumen ejecutivo
+   - Presentación a dirección
+   - Justificación de presupuesto
+   - Hoja de ruta de implementación
 
-Report is production-ready. Share immediately.
+El informe está listo para producción. Compártelo inmediatamente.
 """)
 
 print("="*50)
-print(f"\nTo share: send {report_path} to stakeholders")
-print("To refine: rerun agent with updated metrics")
+print(f"\nPara compartir: envía {report_path} a los stakeholders")
+print("Para refinar: vuelve a ejecutar el agente con métricas actualizadas")
 ```
 
-### Phase 10: Error Handling
+### Fase 10: Manejo de errores
 
 ```python
-# If Claude fails
+# Si Claude falla
 except Exception as e:
     if "claude" in str(e):
-        print("❌ Claude Opus 4.7 unavailable")
-        print("   Check: Anthropic API key configured")
-        print("   Check: Credentials in .env")
+        print("❌ Claude Opus 4.7 no disponible")
+        print("   Verifica: API key de Anthropic configurada")
+        print("   Verifica: Credenciales en .env")
         exit(1)
 
-# If metrics invalid
+# Si las métricas son inválidas
 except ValueError as e:
-    print(f"❌ Metric error: {e}")
-    print("   Re-run agent with valid numbers")
+    print(f"❌ Error en métricas: {e}")
+    print("   Vuelve a ejecutar el agente con números válidos")
     exit(1)
 
-# If DOCX generation fails
+# Si la generación DOCX falla
 except Exception as e:
-    print(f"❌ DOCX generation failed: {e}")
-    print("   Check: python-docx installed")
-    print("   Check: outputs/ folder writable")
+    print(f"❌ Generación DOCX fallida: {e}")
+    print("   Verifica: python-docx instalado")
+    print("   Verifica: carpeta outputs/ con permisos de escritura")
     exit(1)
 ```
 
 ---
 
-## Success Criteria
+## Criterios de éxito
 
-Report generation succeeds when:
+La generación del informe se considera exitosa cuando:
 
-✅ Agent completes without errors  
-✅ DOCX file created in outputs/  
-✅ All 25 quality checks passed  
-✅ No vague language detected  
-✅ Metrics properly included  
-✅ Professional formatting applied  
-✅ Client info correctly populated  
+✅ El agente se completa sin errores  
+✅ Archivo DOCX creado en outputs/  
+✅ Las 25 comprobaciones de calidad superadas  
+✅ No se detecta lenguaje vago  
+✅ Métricas correctamente incluidas  
+✅ Formato profesional aplicado  
+✅ Información del cliente correctamente rellenada  
 
-**You're done when:**
-- File is in outputs/informe-ejecutivo-{date}.docx
-- Metrics are concrete (numbers, not adjectives)
-- Tone is professional and business-focused
-- Report ready to share with client immediately
+**Has terminado cuando:**
+- El archivo está en outputs/informe-ejecutivo-{date}.docx
+- Las métricas son concretas (números, no adjetivos)
+- El tono es profesional y orientado a negocio
+- El informe está listo para compartir con el cliente de inmediato
 

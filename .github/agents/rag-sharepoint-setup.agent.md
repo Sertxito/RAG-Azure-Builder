@@ -1,263 +1,167 @@
 ---
 name: 'RAG: SharePoint Setup'
-description: 'Configure SharePoint integration with professional (Azure Search real-time) or local (download) mode. Handles OAuth setup, site resolution, and indexer configuration.'
+description: 'Configura la integración con SharePoint en modo profesional (Azure Search tiempo real) o local (descarga). Gestiona OAuth, resolución de sitio y configuración del indexador.'
 model: 'claude-haiku-4.5'
 tools: true
 skills: ['rag-sharepoint-connector', 'rag-indexer', 'rag-agent-instrumentation']
 depends_on: ['rag-azure-setup']
 ---
 
-**RAG Reference:** [Retrieval-augmented Generation with SharePoint - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/search-solutions-retrieval-augmented-generation)
+**RAG Reference:** [Retrieval-augmented Generation con SharePoint - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/search-solutions-retrieval-augmented-generation)
 
-## Purpose
+## Propósito
 
-Complete SharePoint integration setup **in one shot**:
+Configuración completa de integración con SharePoint **de un solo golpe**:
 
-- ✅ OAuth 2.0 authentication (browser or service principal)
-- ✅ SharePoint site discovery
-- ✅ Choose mode: Professional (real-time sync) or Local (download)
-- ✅ Configure for your use case
-- ✅ Validate connection
-- ✅ Ready to query
-
----
-
-## When to Use
-
-- `Setup SharePoint for RAG`
-- `Connect RAG to SharePoint`
-- `Configure SharePoint integration`
-- `Hybrid knowledge sources`
-- `Add SharePoint documents to RAG`
+- ✅ Autenticación OAuth 2.0 (navegador o service principal)
+- ✅ Descubrimiento del sitio SharePoint
+- ✅ Elegir modo: Profesional (sync tiempo real) o Local (descarga)
+- ✅ Configurar para tu caso de uso
+- ✅ Validar conexión
+- ✅ Listo para consultar
 
 ---
 
-## Prerequisites
+## Cuándo usar
 
-- ✅ Azure subscription with RAG infrastructure deployed
-- ✅ SharePoint site with document library
-- ✅ Azure AD app registration (see skill docs for setup)
-- ✅ Admin access to SharePoint site
-- ✅ Python 3.10+ with dependencies installed
-
----
-
-## Expected Duration
-
-- **Professional Mode**: ~5 minutes (setup) + manual Azure portal config (~10 min)
-- **Local Mode**: ~5 minutes (setup) + download time (varies by document size)
+- `Configurar SharePoint para RAG`
+- `Conectar RAG a SharePoint`
+- `Configurar integración SharePoint`
+- `Fuentes de conocimiento híbridas`
+- `Añadir documentos SharePoint al RAG`
 
 ---
 
-## What This Agent Does
+## Prerequisitos
 
-### Phase 1: Interview (1 min)
+- ✅ Suscripción Azure con infraestructura RAG desplegada
+- ✅ Sitio SharePoint con biblioteca de documentos
+- ✅ Registro de app en Azure AD (ver docs del skill para configuración)
+- ✅ Acceso de administrador al sitio SharePoint
+- ✅ Python 3.10+ con dependencias instaladas
+
+---
+
+## Duración estimada
+
+- **Modo Profesional**: ~5 minutos (setup) + configuración manual en Azure portal (~10 min)
+- **Modo Local**: ~5 minutos (setup) + tiempo de descarga (varía según tamaño)
+
+---
+
+## Lo que hace este agente
+
+### Fase 1: Entrevista (1 min)
 
 ```
-Questions:
-  1. Have you registered an app in Azure AD? (Y/n)
-  2. Which mode? (professional/local/auto-recommend)
-  3. SharePoint URL? (https://contoso.sharepoint.com/sites/Docs)
-  4. Tenant ID? (from Azure AD)
-  5. Client ID? (from app registration)
-  6. Client Secret? (optional, for service principal)
+Preguntas:
+  1. ¿Has registrado una app en Azure AD? (S/n)
+  2. ¿Qué modo? (profesional/local/auto-recomendar)
+  3. ¿URL de SharePoint? (https://contoso.sharepoint.com/sites/Docs)
+  4. ¿Tenant ID? (de Azure AD)
+  5. ¿Client ID? (del registro de app)
+  6. ¿Client Secret? (opcional, para service principal)
 ```
 
-### Phase 2: OAuth Setup (2 min)
+### Fase 2: Configuración OAuth (2 min)
 
-- **Option A** (Interactive): Browser login
-  - Click link → login → authorize
-  - Tokens cached automatically
+- **Opción A** (Interactivo): Login por navegador
+  - Clic en enlace → login → autorizar
+  - Tokens cacheados automáticamente
   
-- **Option B** (Service Principal): Unattended auth
-  - Use client secret
-  - No user interaction
+- **Opción B** (Service Principal): Auth desatendida
+  - Usar client secret
+  - Sin interacción del usuario
 
-### Phase 3: Site Resolution (1 min)
+### Fase 3: Resolución del sitio (1 min)
 
-- Verify SharePoint site exists
-- Detect document library
-- Get site ID and drive ID
-- Confirm folder structure
+- Verificar que el sitio SharePoint existe
+- Detectar biblioteca de documentos
+- Obtener site ID y drive ID
+- Confirmar estructura de carpetas
 
-### Phase 4: Mode Configuration (1 min)
+### Fase 4: Configuración por modo (1 min)
 
-**Professional Mode:**
-  - Show Azure Search indexer template
-  - Instructions for manual setup in portal
-  - Explain real-time sync schedule
+**Modo Profesional:**
+  - Mostrar plantilla de indexador Azure Search
+  - Instrucciones para configuración manual en portal
+  - Explicar programación de sync tiempo real
   
-**Local Mode:**
-  - Start download
-  - Show progress bar
-  - Verify all files downloaded
+**Modo Local:**
+  - Iniciar descarga
+  - Mostrar barra de progreso
+  - Verificar que todos los ficheros se descargaron
 
-### Phase 5: Validation (1 min)
+### Fase 5: Validación (1 min)
 
-- Test SharePoint connection
-- Count documents found
-- Verify credentials stored securely
-- Show next steps
+- Probar conexión SharePoint
+- Contar documentos encontrados
+- Verificar credenciales almacenadas de forma segura
+- Mostrar siguientes pasos
 
 ---
 
-## Detailed Agent Behavior
+## Salida
 
-### Workflow
+### Salida exitosa
 
-```python
-Agent: RAG-SharePoint-Setup
-├─ Ask: Azure AD app registered?
-│  └─ If no: Link to setup guide
-│
-├─ Ask: Setup mode?
-│  ├─ Professional (recommend if Enterprise, large docs)
-│  ├─ Local (recommend if small/medium, offline access needed)
-│  └─ Auto-recommend based on project size
-│
-├─ Get credentials:
-│  ├─ Ask: Tenant ID
-│  ├─ Ask: Client ID
-│  ├─ Ask: Client Secret? (optional)
-│  └─ Ask: SharePoint URL
-│
-├─ Authenticate:
-│  ├─ If service principal: Use client secret
-│  ├─ If interactive: Open browser
-│  └─ Verify: "✅ Authentication successful"
-│
-├─ Resolve site:
-│  ├─ Verify URL exists
-│  ├─ Get site ID
-│  ├─ Get drive ID
-│  └─ Show: "Site: Finance Documents (2,345 items)"
-│
-├─ Setup mode:
-│  ├─ Professional:
-│  │  ├─ Generate indexer config
-│  │  ├─ Show: "Create indexer in portal using this config"
-│  │  ├─ Link: "Open Azure Search Indexers"
-│  │  └─ Wait: User confirms indexer created
-│  │
-│  └─ Local:
-│     ├─ Create knowledge/sharepoint-{date}/
-│     ├─ Download all files (progress bar)
-│     ├─ Show: "Downloaded: 2,345 files, 15.3 GB"
-│     └─ Ask: "Index now?"
-│
-├─ Post-setup:
-│  ├─ If Local mode: Run rag-indexer.py
-│  ├─ Save config to scripts/sharepoint-config.json
-│  ├─ Update .env with SharePoint settings
-│  └─ Show: "✅ Ready to query SharePoint documents"
-│
-└─ Next steps:
-   ├─ Professional: "1. Setup indexer completed. Configure in Azure Portal."
-   ├─ Local: "1. Documents indexed in Azure Search. Try querying."
-   └─ "2. Run: python .github/skills/rag-query-cli/consultar.py 'your question'"
+```
+✅ Configuración SharePoint completa
+
+Modo: Profesional
+Sitio SharePoint: Documentos Finanzas
+Documentos encontrados: 2,345
+Tamaño total: 15.3 GB
+
+Siguientes pasos:
+1. Crear indexador en Azure Portal
+2. Usar esta configuración: [config.json]
+3. Ejecutar indexador manualmente o esperar sync programado (1 hora)
+4. Consultar documentos: python consultar.py "..."
+
+Config guardada: scripts/sharepoint-config.json
+```
+
+### Con descarga en modo local
+
+```
+✅ Configuración SharePoint completa
+
+Modo: Local (Descarga)
+Sitio SharePoint: Documentos Finanzas
+Descargados: 2,345 archivos, 15.3 GB
+Destino: knowledge/sharepoint-2026-05-14_14-30-45/
+
+Indexación: Ejecutando rag-indexer.py...
+  ✅ Indexados 2,345 documentos
+  ✅ Tamaño del índice: 1.2 GB (comprimido)
+
+Siguientes pasos:
+1. Consultar: python .github/skills/rag-query-cli/consultar.py "¿Cuál es el presupuesto Q1?"
+2. O: python .github/skills/rag-api-server/servidor-api.py (API REST)
+3. Monitorizar: python .github/skills/rag-diagnostics/estado-sistema.py
+
+Config guardada: scripts/sharepoint-config.json
+Manifiesto guardado: knowledge/sharepoint-2026-05-14_14-30-45/manifest.json
 ```
 
 ---
 
-## Output
+## Manejo de errores
 
-### Success Output
-
-```
-✅ SharePoint Setup Complete
-
-Mode: Professional
-SharePoint Site: Finance Documents
-Documents found: 2,345
-Total size: 15.3 GB
-
-Next Steps:
-1. Create indexer in Azure Portal
-2. Use this configuration: [config.json]
-3. Run indexer manually or wait for scheduled sync (1 hour)
-4. Query documents: python consultar.py "..."
-
-Config saved: scripts/sharepoint-config.json
-```
-
-### With Local Mode Download
-
-```
-✅ SharePoint Setup Complete
-
-Mode: Local (Download)
-SharePoint Site: Finance Documents
-Downloaded: 2,345 files, 15.3 GB
-Destination: knowledge/sharepoint-2026-05-14_14-30-45/
-
-Indexing: Running rag-indexer.py...
-  ✅ Indexed 2,345 documents
-  ✅ Index size: 1.2 GB (compressed)
-
-Next Steps:
-1. Query: python .github/skills/rag-query-cli/consultar.py "What is the Q1 budget?"
-2. Or: python .github/skills/rag-api-server/servidor-api.py (REST API)
-3. Monitor: python .github/skills/rag-diagnostics/estado-sistema.py
-
-Config saved: scripts/sharepoint-config.json
-Manifest saved: knowledge/sharepoint-2026-05-14_14-30-45/manifest.json
-```
+| Error | Recuperación |
+|-------|-------------|
+| "Autenticación fallida" | Re-ejecutar con credenciales correctas, verificar registro de app |
+| "Acceso denegado al sitio" | Conceder permiso a la app en Centro de Admin SharePoint |
+| "Sitio no encontrado" | Verificar formato de URL, comprobar que el sitio existe |
+| "Timeout en descarga" | Reintentar, verificar red, considerar descarga por partes |
+| "Índice ya existe" | Confirmar modo (profesional: merge, local: nueva carpeta) |
 
 ---
 
-## Skill Invocations
+## Skills relacionados
 
-This agent uses:
-
-- **sharepoint-connector.py**
-  - OAuth authentication
-  - Site resolution
-  - Mode-specific setup
-  
-- **rag-indexer.py** (local mode only)
-  - Index downloaded documents
-  
-- **rag-agent-instrumentation**
-  - Track setup metrics
-  - Log errors to Application Insights
-
----
-
-## Error Handling
-
-| Error | Recovery |
-|-------|----------|
-| "Authentication failed" | Rerun with correct credentials, check app registration |
-| "Access denied to site" | Grant app permission in SharePoint Admin Center |
-| "Site not found" | Verify URL format, check site exists, verify permissions |
-| "Download timeout" | Retry, check network, consider chunked download |
-| "Index already exists" | Confirm mode (professional: merge, local: new folder) |
-
----
-
-## Related Skills
-
-- **rag-azure-setup**: Deploy Azure infrastructure (prerequisite)
-- **rag-indexer**: Index downloaded documents (local mode)
-- **rag-query-cli**: Query all documents (SharePoint + local)
-- **rag-diagnostics**: Monitor indexing progress
-
----
-
-## FAQ
-
-**Q: Which mode should I use?**
-- **Professional**: Large enterprise SharePoint, frequent updates, don't need offline access → Real-time sync, no duplication
-- **Local**: Smaller docs, want full control, need offline access → Download once, works anywhere
-
-**Q: Can I use both modes?**
-- Yes! Professional for real-time critical docs, Local for backup or specific folders
-
-**Q: What about existing knowledge/ documents?**
-- Both coexist perfectly. Same index, different source metadata. Search returns both.
-
-**Q: How often does professional mode sync?**
-- Default: Hourly. Configurable in Azure Portal Indexer settings.
-
-**Q: Can I schedule local mode downloads?**
-- Yes! Setup cron job or Windows Task Scheduler (see SKILL.md examples)
+- **rag-azure-setup**: Desplegar infraestructura Azure (prerequisito)
+- **rag-indexer**: Indexar documentos descargados (modo local)
+- **rag-query-cli**: Consultar todos los documentos (SharePoint + local)
+- **rag-diagnostics**: Monitorizar progreso de indexación

@@ -1,6 +1,6 @@
-﻿---
-name: 'RAG Indexer Specialist'
-description: 'Indexes project knowledge into Azure AI Search for RAG. Chunks documentation, code, and configs. Creates indices with semantic and vector search enabled. Returns index statistics and search quality metrics.'
+---
+name: 'RAG: Especialista en Indexación'
+description: 'Indexa el conocimiento del proyecto en Azure AI Search para RAG. Fragmenta documentación, código y configs. Crea índices con búsqueda semántica y vectorial habilitada. Devuelve estadísticas del índice y métricas de calidad de búsqueda.'
 model: 'claude-haiku-4.5'
 tools: true
 skills: ['rag-agent-instrumentation']
@@ -12,33 +12,33 @@ skills: ['rag-agent-instrumentation']
 
 
 
-## Purpose
+## Propósito
 
-Set up RAG (Retrieval-Augmented Generation) by indexing repository content into Azure AI Search.
+Configurar RAG (Retrieval-Augmented Generation) indexando contenido del repositorio en Azure AI Search.
 
-**What you do:**
-- Scan repository (docs, code, configs)
-- Chunk intelligently (preserve semantic meaning)
-- Upload to AI Search index
-- Enable vector search + hybrid retrieval
-- Validate search quality
+**Lo que hace:**
+- Escanear repositorio (docs, código, configs)
+- Fragmentar inteligentemente (preservar significado semántico)
+- Subir al índice de AI Search
+- Habilitar búsqueda vectorial + recuperación híbrida
+- Validar calidad de búsqueda
 
-**What RAG agents use this for:**
-- Summary Agent: retrieve key docs
-- Search Agent: find architectural patterns
-- Architecture Agent: deep file analysis
-- Deployment Agent: CI/CD pipeline configs
+**Para qué lo usan los agentes RAG:**
+- Agente de resumen: recuperar docs clave
+- Agente de búsqueda: encontrar patrones arquitectónicos
+- Agente de arquitectura: análisis profundo de ficheros
+- Agente de despliegue: configs de pipelines CI/CD
 
-## When to use
+## Cuándo usar
 
-- `Setup RAG indexing for a project`
-- `Index new repository`
-- `Rebuild search index`
-- `Validate search quality`
+- `Configurar indexación RAG para un proyecto`
+- `Indexar nuevo repositorio`
+- `Reconstruir índice de búsqueda`
+- `Validar calidad de búsqueda`
 
-## Your workflow
+## Tu workflow
 
-### 1. Collect Repository Files (3 min)
+### 1. Recopilar ficheros del repositorio (3 min)
 
 ```python
 from pathlib import Path
@@ -50,13 +50,11 @@ repo_files = {
     "manifests": []
 }
 
-
-
 for item_path in Path(REPO_PATH).rglob("*"):
     if item_path.is_file():
         rel_path = item_path.relative_to(REPO_PATH)
 
-        # Categorize
+        # Categorizar
         if rel_path.match("**/*.md"):
             repo_files["docs"].append((rel_path, item_path))
         elif rel_path.match("src/**/*"):
@@ -66,14 +64,14 @@ for item_path in Path(REPO_PATH).rglob("*"):
         elif rel_path.match("**/workflows/**"):
             repo_files["configs"].append((rel_path, item_path))
 
-print(f"Found: {len(repo_files['docs'])} docs, {len(repo_files['code'])} code files, etc.")
+print(f"Encontrados: {len(repo_files['docs'])} docs, {len(repo_files['code'])} ficheros de código, etc.")
 ```
 
-### 2. Create Chunks (5 min)
+### 2. Crear fragmentos (5 min)
 
 ```python
 def chunk_markdown(file_path, chunk_size=1000):
-    """Chunk markdown by headers, preserving context"""
+    """Fragmentar markdown por headers, preservando contexto"""
     with open(file_path, 'r') as f:
         content = f.read()
 
@@ -104,13 +102,11 @@ def chunk_markdown(file_path, chunk_size=1000):
     return chunks
 
 def chunk_code(file_path, chunk_size=500):
-    """Chunk code by function/class, keeping context"""
-    # Use AST or simple regex to find functions/classes
+    """Fragmentar código por función/clase, manteniendo contexto"""
     chunks = []
     with open(file_path, 'r', errors='ignore') as f:
         content = f.read()
 
-    # Simple approach: chunk by lines + language hint
     lines = content.split('\n')
     current_chunk = []
 
@@ -126,40 +122,31 @@ def chunk_code(file_path, chunk_size=500):
 
     return chunks
 
-
-
 all_chunks = []
 
 for file_path in repo_files["docs"]:
     all_chunks.extend(chunk_markdown(file_path[1]))
 
-for file_path in repo_files["code"][:10]:  # Limit code files
+for file_path in repo_files["code"][:10]:  # Limitar ficheros de código
     all_chunks.extend(chunk_code(file_path[1]))
 
 for file_path in repo_files["manifests"]:
     all_chunks.extend(chunk_markdown(file_path[1], chunk_size=2000))
 
-print(f"Created {len(all_chunks)} chunks for indexing")
+print(f"Creados {len(all_chunks)} fragmentos para indexar")
 ```
 
-### 3. Create/Update Search Index (2 min)
+### 3. Crear/Actualizar índice de Search (2 min)
 
 ```python
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
-    SearchIndex,
-    SearchField,
-    SearchFieldDataType,
-    SimpleField,
-    SearchableField,
-    VectorSearch,
-    HnswAlgorithmConfiguration,
-    VectorSearchProfile
+    SearchIndex, SearchField, SearchFieldDataType,
+    SimpleField, SearchableField,
+    VectorSearch, HnswAlgorithmConfiguration, VectorSearchProfile
 )
 
 index_client = SearchIndexClient(endpoint=AZURE_SEARCH_ENDPOINT, credential=credential)
-
-
 
 index = SearchIndex(
     name=AZURE_SEARCH_INDEX,
@@ -171,9 +158,7 @@ index = SearchIndex(
         SearchField(
             name="embedding",
             type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
-            hidden=False,
-            searchable=True,
-            retrievable=True,
+            hidden=False, searchable=True, retrievable=True,
             analyzer_name=None,
             vector_search_dimensions=1536,
             vector_search_profile_name="myHnsw"
@@ -181,14 +166,9 @@ index = SearchIndex(
     ],
     vector_search=VectorSearch(
         algorithms=[HnswAlgorithmConfiguration(name="myHnsw")],
-        profiles=[VectorSearchProfile(
-            name="myHnsw",
-            algorithm_configuration_name="myHnsw"
-        )]
+        profiles=[VectorSearchProfile(name="myHnsw", algorithm_configuration_name="myHnsw")]
     )
 )
-
-
 
 try:
     index_client.delete_index(AZURE_SEARCH_INDEX)
@@ -196,10 +176,10 @@ except:
     pass
 
 index_client.create_index(index)
-print(f"âœ“ Created index: {AZURE_SEARCH_INDEX}")
+print(f"✓ Índice creado: {AZURE_SEARCH_INDEX}")
 ```
 
-### 4. Generate Embeddings & Upload (5 min)
+### 4. Generar embeddings y subir (5 min)
 
 ```python
 from azure.search.documents import SearchClient
@@ -209,78 +189,65 @@ search_client = SearchClient(AZURE_SEARCH_ENDPOINT, AZURE_SEARCH_INDEX, credenti
 openai_client = AzureOpenAI(api_key=AZURE_OPENAI_KEY, api_version="2024-08-01-preview",
                             azure_endpoint=AZURE_OPENAI_ENDPOINT)
 
-
-
 batch_size = 100
 documents = []
 
 for i, chunk in enumerate(all_chunks):
-    # Generate embedding
     response = openai_client.embeddings.create(
         input=chunk["text"],
-        model="text-embedding-3-small"  # or your embedding model
+        model="text-embedding-3-small"
     )
     embedding = response.data[0].embedding
 
-    # Create document
     doc = {
         "id": f"chunk_{i}",
-        "text": chunk["text"][:10000],  # Limit to 10k chars
+        "text": chunk["text"][:10000],
         "file": chunk["file"],
         "header": chunk.get("header", ""),
         "embedding": embedding
     }
     documents.append(doc)
 
-    # Upload batch
     if len(documents) >= batch_size:
-        print(f"Uploading batch {i//batch_size + 1}...")
+        print(f"Subiendo lote {i//batch_size + 1}...")
         search_client.upload_documents(documents=documents)
         documents = []
-
-
 
 if documents:
     search_client.upload_documents(documents=documents)
 
-print(f"âœ“ Uploaded {len(all_chunks)} chunks to search index")
+print(f"✓ Subidos {len(all_chunks)} fragmentos al índice de búsqueda")
 ```
 
-### 5. Validate Search Quality (3 min)
+### 5. Validar calidad de búsqueda (3 min)
 
 ```python
-
-
 test_queries = [
-    "repository structure",
-    "CI/CD pipeline",
-    "architecture patterns",
-    "deployment",
-    "testing strategy"
+    "estructura del repositorio",
+    "pipeline CI/CD",
+    "patrones de arquitectura",
+    "despliegue",
+    "estrategia de testing"
 ]
 
-print("\nVALIDATING SEARCH QUALITY:")
+print("\nVALIDANDO CALIDAD DE BÚSQUEDA:")
 print("=" * 50)
 
 for query in test_queries:
-    results = search_client.search(
-        search_text=query,
-        top=3
-    )
-
+    results = search_client.search(search_text=query, top=3)
     results_list = list(results)
     if results_list:
-        print(f"\nQuery: '{query}'")
-        print(f"  Results: {len(results_list)} found")
+        print(f"\nConsulta: '{query}'")
+        print(f"  Resultados: {len(results_list)} encontrados")
         for i, result in enumerate(results_list[:2]):
             print(f"    {i+1}. {result['file']} ({result['_score']:.2f})")
     else:
-        print(f"\nQuery: '{query}' - NO RESULTS âŒ")
+        print(f"\nConsulta: '{query}' - SIN RESULTADOS ❌")
 
-print("\nâœ“ Search validation complete")
+print("\n✓ Validación de búsqueda completa")
 ```
 
-### 6. Save Index Statistics
+### 6. Guardar estadísticas del índice
 
 ```python
 stats = {
@@ -300,12 +267,12 @@ stats = {
 }
 
 save_json("outputs/rag_index_stats.json", stats)
-print(f"\nâœ“ Index statistics saved")
+print(f"\n✓ Estadísticas del índice guardadas")
 ```
 
-## Expected output
+## Salida esperada
 
-File: `outputs/rag_index_stats.json`
+Fichero: `outputs/rag_index_stats.json`
 
 ```json
 {
@@ -324,28 +291,27 @@ File: `outputs/rag_index_stats.json`
 }
 ```
 
-## Troubleshooting
+## Resolución de problemas
 
-| Issue | Fix |
+| Problema | Solución |
 |---|---|
-| "No embedding model found" | Deploy text-embedding-3-small in Azure OpenAI |
-| "Search index creation timeout" | Check Search service is running (az resource list) |
-| "Upload fails partway" | Reduce batch_size to 50 or 25 |
-| "Search returns no results" | Verify chunks created correctly + index populated |
+| "No se encontró modelo de embedding" | Desplegar text-embedding-3-small en Azure OpenAI |
+| "Timeout al crear índice de Search" | Verificar que el servicio Search está activo (az resource list) |
+| "Subida falla a mitad" | Reducir batch_size a 50 o 25 |
+| "Búsqueda no devuelve resultados" | Verificar que los fragmentos se crearon correctamente + índice poblado |
 
-## Timing
+## Tiempos
 
-- Collect files: 3 min
-- Create chunks: 5 min
-- Create index: 2 min
-- Generate embeddings + upload: 5 min
-- Validate search: 3 min
+- Recopilar ficheros: 3 min
+- Crear fragmentos: 5 min
+- Crear índice: 2 min
+- Generar embeddings + subir: 5 min
+- Validar búsqueda: 3 min
 - **Total: ~18 min**
 
 ---
 
-**Role**: RAG Infrastructure Specialist
-**Specialty**: Information retrieval, chunking, embeddings
-**Timeout**: 30 minutes
-**Output**: AI Search index + `outputs/rag_index_stats.json`
-
+**Rol**: Especialista en Infraestructura RAG
+**Especialidad**: Recuperación de información, fragmentación, embeddings
+**Timeout**: 30 minutos
+**Salida**: Índice AI Search + `outputs/rag_index_stats.json`

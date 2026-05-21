@@ -1,28 +1,28 @@
-# RAG Indexer — Document Indexing
+# RAG Indexer — Indexación de Documentos
 
-**Index documents from `knowledge/` folder into Azure AI Search.**
+**Indexa documentos desde la carpeta `knowledge/` en Azure AI Search.**
 
-## Overview
+## Descripción General
 
-Bulk-indexes documents from various formats (PDF, DOCX, SQL, TXT, MD) into Azure AI Search with automatic chunking and metadata extraction.
+Indexa masivamente documentos de varios formatos (PDF, DOCX, SQL, TXT, MD) en Azure AI Search con chunking automático y extracción de metadatos.
 
-## Features
+## Características
 
-- ✅ Multi-format support (PDF, DOCX, SQL, TXT, MD, XML)
-- ✅ Automatic text chunking with overlap
-- ✅ Index creation if not exists
-- ✅ Error handling and reporting
-- ✅ Progress tracking
-- ✅ Relative path support
+- Soporte multi-formato (PDF, DOCX, SQL, TXT, MD, XML)
+- Chunking automático de texto con overlap
+- Creación del índice si no existe
+- Manejo de errores e informes
+- Seguimiento de progreso
+- Soporte de rutas relativas
 
-## Requirements
+## Requisitos
 
-- Azure AI Search instance
-- `.env` file with:
+- Instancia Azure AI Search
+- Archivo `.env` con:
   - `AZURE_SEARCH_ENDPOINT`
   - `AZURE_SEARCH_KEY`
   - `AZURE_SEARCH_INDEX`
-- `knowledge/` folder structure:
+- Estructura de carpeta `knowledge/`:
   ```
   knowledge/
   ├── pdfs/
@@ -31,143 +31,70 @@ Bulk-indexes documents from various formats (PDF, DOCX, SQL, TXT, MD) into Azure
   └── presentaciones/
   ```
 
-## Installation
+## Instalación
 
 ```bash
 pip install -r .github/requirements.txt
 ```
 
-## Usage
+## Uso
 
-### Run Indexing
+### Ejecutar Indexación
 
 ```bash
-# From project root
+# Desde la raíz del proyecto
 python .github/skills/rag-indexer/indexar.py
 ```
 
-### What It Does
+### Qué Hace
 
-1. **Creates index** if doesn't exist
-2. **Scans folders**:
-   - `knowledge/pdfs/` → PDF documents
-   - `knowledge/procedimientos/` → Word/Excel/Markdown
-   - `knowledge/codigo/` → SQL/Python/JavaScript
-   - `knowledge/presentaciones/` → PowerPoint/Images
-3. **Extracts text** from each file
-4. **Chunks text** (1000 tokens, 200 token overlap)
-5. **Uploads to Azure** with metadata
-6. **Reports summary**
+1. **Crea índice** si no existe
+2. **Escanea carpetas**:
+   - `knowledge/pdfs/` -> Documentos PDF
+   - `knowledge/procedimientos/` -> Word/Excel/Markdown
+   - `knowledge/codigo/` -> SQL/Python/JavaScript
+   - `knowledge/presentaciones/` -> PowerPoint/Imágenes
+3. **Extrae texto** de cada archivo
+4. **Fragmenta texto** (1000 tokens, 200 tokens de overlap)
+5. **Sube a Azure** con metadatos
+6. **Reporta resumen**
 
-### Output Example
+### Ejemplo de Output
 
 ```
 ============================================================
-  RAG Indexer - Indexing Documents
+  RAG Indexer - Indexando Documentos
 ============================================================
 
-✅ Index 'rag-documents' already exists
+  Índice 'rag-documents' ya existe
 
-🔍 Starting indexation...
+  Iniciando indexación...
 
-📂 Indexing pdf from pdfs/
-  ✅ Manual.pdf (8 chunks)
-  ✅ FAQ.pdf (12 chunks)
-  Total: 2 files indexed
+  Indexando pdf desde pdfs/
+    Manual.pdf (8 chunks)
+    FAQ.pdf (12 chunks)
+  Total: 2 archivos indexados
 
-📂 Indexing document from procedimientos/
-  ✅ Process.docx (5 chunks)
-  ✅ Checklist.xlsx (3 chunks)
-  Total: 2 files indexed
+  Indexando documento desde procedimientos/
+    Process.docx (5 chunks)
+    Checklist.xlsx (3 chunks)
+  Total: 2 archivos indexados
 
-📂 Indexing code from codigo/
-  ✅ schema.sql (15 chunks)
-  Total: 1 files indexed
+  Indexando código desde codigo/
+    schema.sql (15 chunks)
+  Total: 1 archivo indexado
 
-📂 Indexing presentation from presentaciones/
-  ✅ Architecture.pptx (4 chunks)
-  Total: 1 file indexed
+  Indexando presentación desde presentaciones/
+    Architecture.pptx (4 chunks)
+  Total: 1 archivo indexado
 
 ============================================================
-  Indexation Summary
+  Resumen de Indexación
 ============================================================
-✅ Total files processed: 6
-✅ Total documents indexed: 6
-✅ Total chunks created: 47
+  Total archivos procesados: 6
+  Total documentos indexados: 6
+  Total chunks creados: 47
 
-✅ Indexation complete! Ready to query.
+  Indexación completa! Listo para consultar.
 ============================================================
 ```
-
-## Chunking Strategy
-
-- **Chunk size**: 1000 tokens
-- **Overlap**: 200 tokens (for context continuity)
-- **Format**: Preserves structure, removes noise
-- **Metadata**: File path, chunk ID, creation timestamp
-
-## Supported Formats
-
-| Format | Processor | Use Case |
-|---|---|---|
-| `.pdf` | PyPDF2 | Manuals, reports |
-| `.docx` | python-docx | Procedures, guides |
-| `.xlsx` | openpyxl | Checklists, data |
-| `.sql` | Text reader | Database schemas |
-| `.py/.js` | Text reader | Code documentation |
-| `.txt/.md` | Text reader | Plain text docs |
-| `.xml` | Text reader | Configuration |
-
-## API
-
-```python
-from indexar import RAGIndexer
-
-indexer = RAGIndexer()
-
-# Create index if needed
-indexer.ensure_index_exists()
-
-# Index specific directory
-indexer.index_directory(
-    Path("knowledge/pdfs"),
-    source_type="pdf",
-    pattern="*.pdf"
-)
-
-# Get statistics
-print(indexer.stats)
-```
-
-## Troubleshooting
-
-| Issue | Solution |
-|---|---|
-| `No Azure credentials` | Check `.env` file |
-| `knowledge/ not found` | Run from project root where `knowledge/` exists |
-| `PDF extract errors` | Scanned PDFs (images) need OCR |
-| `DOCX/XLSX not reading` | Verify file isn't corrupted or password-protected |
-
-## Performance
-
-- Small project (50 docs, ~10MB): ~5-10 seconds
-- Medium project (500 docs, ~100MB): ~30-60 seconds
-- Large project (5000+ docs): Consider batching
-
-## Re-indexing
-
-To re-index after adding new documents:
-
-```bash
-# Just run again—new docs are added, existing are updated
-python .github/skills/rag-indexer/indexar.py
-```
-
-## Related Skills
-
-- [`rag-query-cli`](../rag-query-cli/SKILL.md) — Query indexed documents
-- [`rag-diagnostics`](../rag-diagnostics/SKILL.md) — Check index health
-
-## See Also
-
-- [.github/STANDALONE_GUIDE.md](../../STANDALONE_GUIDE.md) — Full setup workflow

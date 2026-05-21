@@ -3,15 +3,15 @@
 
 
 
-**Purpose:** Fully automated wizard for new users. Setup â†’ Deploy â†’ Index â†’ Ready.
+**Propósito:** Asistente de onboarding completamente automatizado para nuevos usuarios. Configurar → Desplegar → Indexar → Listo.
 
-**User Entry:** `copilot-cli run .github/agents/rag-onboarding.agent.md`
+**Entrada del usuario:** `copilot-cli run .github/agents/rag-onboarding.agent.md`
 
-**Expected Duration:** ~30 minutes total (fully automatic)
+**Duración estimada:** ~30 minutos en total (totalmente automático)
 
 ---
 
-## ✅ MUST-DO Checklist
+## ✅ Lista de verificación OBLIGATORIA
 
 - [ ] Preguntar nombre del proyecto → crear `rag-{nombre}/`
 - [ ] Crear estructura de carpetas dentro de `rag-{nombre}/`
@@ -27,7 +27,7 @@
 
 ---
 
-## Phase-by-Phase Automation
+## Automatización fase a fase
 
 ### Fase 0: Crear estructura del proyecto (1 min)
 
@@ -59,11 +59,9 @@ print(f"✅ Creada carpeta: {folder_name}/")
 print(f"   Añade tus documentos en {folder_name}/knowledge/ antes de continuar")
 ```
 
-### Fase 1: Entrevista al usuario (2 min)
+### Fase 1: Verificar estructura de documentos (2 min)
 
 ```python
-
-
 import os
 
 knowledge_path = "knowledge"
@@ -73,125 +71,109 @@ if not os.path.exists(knowledge_path):
     os.makedirs(knowledge_path)
     for subdir in required_dirs:
         os.makedirs(f"{knowledge_path}/{subdir}")
-    print("âœ… Created knowledge/ folder structure")
+    print("✅ Creada estructura knowledge/")
 else:
     missing = [d for d in required_dirs if not os.path.exists(f"{knowledge_path}/{d}")]
     if missing:
         for d in missing:
             os.makedirs(f"{knowledge_path}/{d}")
-        print(f"âœ… Created missing subdirs: {missing}")
-
-
+        print(f"✅ Creados subdirectorios faltantes: {missing}")
 
 pdf_count = len(os.listdir(f"{knowledge_path}/pdfs"))
 proc_count = len(os.listdir(f"{knowledge_path}/procedimientos"))
 code_count = len(os.listdir(f"{knowledge_path}/codigo"))
 ppt_count = len(os.listdir(f"{knowledge_path}/presentaciones"))
 
-print(f"\nðŸ“‚ Current documentation:")
-print(f"   PDFs: {pdf_count} files")
-print(f"   Procedimientos: {proc_count} files")
-print(f"   CÃ³digo: {code_count} files")
-print(f"   Presentaciones: {ppt_count} files")
+print(f"\n📂 Documentación actual:")
+print(f"   PDFs: {pdf_count} archivos")
+print(f"   Procedimientos: {proc_count} archivos")
+print(f"   Código: {code_count} archivos")
+print(f"   Presentaciones: {ppt_count} archivos")
 ```
 
-### Phase 2: User Interview (5 min)
+### Fase 2: Entrevista al usuario (5 min)
 
 ```
-Ask EXACTLY these 5 questions (no more, no less):
+Preguntar EXACTAMENTE estas 5 preguntas (ni más, ni menos):
 
-1ï¸âƒ£  Project name?
-    Example: "rag-builder"
+1️⃣  ¿Nombre del proyecto?
+    Ejemplo: "rag-builder"
     
-2ï¸âƒ£  Project description? (1-2 sentences)
-    Example: "Customer management system for retail banking"
+2️⃣  ¿Descripción del proyecto? (1-2 frases)
+    Ejemplo: "Sistema de gestión de clientes para banca minorista"
     
-3ï¸âƒ£  Total documentation size?
-    Options: 
-      - small (< 1GB)
-      - medium (1-10GB)
-      - large (> 10GB)
+3️⃣  ¿Tamaño total de documentación?
+    Opciones: 
+      - pequeño (< 1GB)
+      - mediano (1-10GB)
+      - grande (> 10GB)
     
-4ï¸âƒ£  Monthly Azure budget?
-    Default: $2,000
+4️⃣  ¿Presupuesto mensual en Azure?
+    Por defecto: $2,000
     
-5ï¸âƒ£  Preferred Azure region?
-    Default: eastus
-    Options: eastus, westus2, northeurope, southeastasia
+5️⃣  ¿Región Azure preferida?
+    Por defecto: eastus
+    Opciones: eastus, westus2, northeurope, southeastasia
 
-Store answers in: outputs/interview-{timestamp}.json
+Guardar respuestas en: outputs/interview-{timestamp}.json
 ```
 
-### Phase 3: Recommend Config (1 min - AUTO)
+### Fase 3: Recomendar configuración (1 min - AUTO)
 
 ```python
-
-
-
 recommendations = {
     "small": {
-        "openai": {"tier": "S0", "model": "gpt-4o", "tokens": "2M/mo", "cost": 1200},
+        "openai": {"tier": "S0", "model": "gpt-4o", "tokens": "2M/mes", "cost": 1200},
         "search": {"tier": "Standard", "replicas": 1, "cost": 200},
-        "appinsights": {"retention": "30 days", "cost": 50},
+        "appinsights": {"retention": "30 días", "cost": 50},
         "total": 1450
     },
     "medium": {
-        "openai": {"tier": "S0", "model": "gpt-4o", "tokens": "2M/mo", "cost": 1200},
+        "openai": {"tier": "S0", "model": "gpt-4o", "tokens": "2M/mes", "cost": 1200},
         "search": {"tier": "Standard", "replicas": 2, "cost": 250},
-        "appinsights": {"retention": "30 days", "cost": 50},
+        "appinsights": {"retention": "30 días", "cost": 50},
         "total": 1500
     },
     "large": {
-        "openai": {"tier": "S1", "model": "gpt-4o", "tokens": "4M/mo", "cost": 2400},
+        "openai": {"tier": "S1", "model": "gpt-4o", "tokens": "4M/mes", "cost": 2400},
         "search": {"tier": "Standard", "replicas": 3, "cost": 300},
-        "appinsights": {"retention": "30 days", "cost": 50},
+        "appinsights": {"retention": "30 días", "cost": 50},
         "total": 2750
     }
 }
 
-
-
 config = recommendations[doc_size]
 
 print(f"""
-ðŸ“Š RECOMMENDED CONFIGURATION:
-   Azure OpenAI:  {config['openai']['tier']} - {config['openai']['tokens']} - ${config['openai']['cost']}/mo
-   Search:        {config['search']['tier']} ({config['search']['replicas']} replicas) - ${config['search']['cost']}/mo
-   AppInsights:   {config['appinsights']['retention']} - ${config['appinsights']['cost']}/mo
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   TOTAL:         ${config['total']}/mo
+📊 CONFIGURACIÓN RECOMENDADA:
+   Azure OpenAI:  {config['openai']['tier']} - {config['openai']['tokens']} - ${config['openai']['cost']}/mes
+   Search:        {config['search']['tier']} ({config['search']['replicas']} réplicas) - ${config['search']['cost']}/mes
+   AppInsights:   {config['appinsights']['retention']} - ${config['appinsights']['cost']}/mes
+   ────────────────────────────────────
+   TOTAL:         ${config['total']}/mes
 
-Budget provided: ${budget}/mo
-Status: {"âœ… FITS BUDGET" if config['total'] <= budget else "âš ï¸  EXCEEDS BUDGET"}
+Presupuesto declarado: ${budget}/mes
+Estado: {"✅ DENTRO DEL PRESUPUESTO" if config['total'] <= budget else "⚠️  EXCEDE PRESUPUESTO"}
 """)
 
-
-
-print("Proceed with this configuration? (Y/n)")
+print("¿Proceder con esta configuración? (S/n)")
 ```
 
-### Phase 4: Validate Costs (1 min - AUTO)
+### Fase 4: Validar costes (1 min - AUTO)
 
 ```python
-
-
-
-
-
 if config_cost > user_budget:
     print(f"""
-âš ï¸  Configuration (${config_cost}) exceeds budget (${user_budget}).
+⚠️  La configuración (${config_cost}) excede el presupuesto (${user_budget}).
 
-Options:
-  A) Continue anyway (costs will accumulate)
-  B) Use smaller tier
-  C) Increase budget
-  D) Cancel
+Opciones:
+  A) Continuar igualmente (los costes se acumularán)
+  B) Usar tier más pequeño
+  C) Aumentar presupuesto
+  D) Cancelar
 
-Your choice? (A/B/C/D)
+¿Tu elección? (A/B/C/D)
     """)
-
-
 
 import subprocess
 result = subprocess.run([
@@ -203,32 +185,26 @@ result = subprocess.run([
 
 if not result.stdout:
     print(f"""
-âš ï¸  Region {region} may have quota issues.
+⚠️  La región {region} puede tener problemas de cuota.
 
-Trying alternative regions...
+Probando regiones alternativas...
     """)
-    # Try: westus2, northeurope, etc.
-
-
 
 try:
     from azure.identity import DefaultAzureCredential
-    # Try to get model capability in region
+    # Intentar verificar disponibilidad del modelo en la región
 except:
-    print("âš ï¸  Could not verify OpenAI in this region. Continuing...")
+    print("⚠️  No se pudo verificar OpenAI en esta región. Continuando...")
 
-print("âœ… Cost validation passed")
+print("✅ Validación de costes superada")
 ```
 
-### Phase 5: Deploy Infrastructure (10 min - AUTO, SILENT)
+### Fase 5: Desplegar infraestructura (10 min - AUTO, SILENCIOSO)
 
 ```bash
 #!/bin/bash
 
-
-
-
-echo "ðŸš€ Deploying Azure infrastructure..."
+echo "🚀 Desplegando infraestructura Azure..."
 
 az group create \
   --name "${RESOURCE_GROUP}" \
@@ -242,25 +218,25 @@ az deployment group create \
     searchTier="${SEARCH_TIER}" \
     appInsightsRetention="${APPINSIGHTS_RETENTION}"
 
-echo "âœ… Infrastructure deployed"
+echo "✅ Infraestructura desplegada"
 ```
 
-**Show Progress:**
+**Mostrar progreso:**
 ```
-â³ Deploying Azure infrastructure...
-   â³ Creating Resource Group...
-   âœ… Resource Group created
-   â³ Deploying Azure OpenAI...
-   âœ… Azure OpenAI deployed
-   â³ Deploying AI Search...
-   âœ… AI Search deployed
-   â³ Deploying Application Insights...
-   âœ… Application Insights deployed
+⏳ Desplegando infraestructura Azure...
+   ⏳ Creando Grupo de Recursos...
+   ✅ Grupo de Recursos creado
+   ⏳ Desplegando Azure OpenAI...
+   ✅ Azure OpenAI desplegado
+   ⏳ Desplegando AI Search...
+   ✅ AI Search desplegado
+   ⏳ Desplegando Application Insights...
+   ✅ Application Insights desplegado
 
-âœ… All infrastructure ready!
+✅ ¡Toda la infraestructura lista!
 ```
 
-### Phase 6: Index Documents (10-15 min - AUTO, SHOW PROGRESS)
+### Fase 6: Indexar documentos (10-15 min - AUTO, MOSTRAR PROGRESO)
 
 ```python
 import os
@@ -274,18 +250,18 @@ knowledge_path = "knowledge"
 for doc_type, subdir in [
     ("PDFs", "pdfs"),
     ("Procedimientos", "procedimientos"),
-    ("CÃ³digo", "codigo"),
+    ("Código", "codigo"),
     ("Presentaciones", "presentaciones")
 ]:
     folder = f"{knowledge_path}/{subdir}"
     files = os.listdir(folder)
     
-    print(f"\nâ³ Indexing {doc_type}...")
+    print(f"\n⏳ Indexando {doc_type}...")
     
     for file in files:
         filepath = os.path.join(folder, file)
         
-        # Process file (OCR for PDFs, parse for others)
+        # Procesar fichero (OCR para PDFs, parsing para otros)
         if file.endswith('.pdf'):
             chunks = extract_pdf(filepath)
         elif file.endswith(('.docx', '.xlsx')):
@@ -297,36 +273,34 @@ for doc_type, subdir in [
         else:
             continue
         
-        # Generate embeddings
+        # Generar embeddings
         embeddings = [generate_embedding(c) for c in chunks]
         
-        # Upload to Azure Search
+        # Subir a Azure Search
         search_client.upload_documents([...])
     
-    print(f"   âœ… Indexed {len(files)} {doc_type} files")
+    print(f"   ✅ Indexados {len(files)} archivos de {doc_type}")
 
-print("\nâœ… Indexing complete!")
+print("\n✅ ¡Indexación completa!")
 ```
 
-**Show Summary:**
+**Mostrar resumen:**
 ```
-ðŸ“š Indexing complete!
+📚 ¡Indexación completa!
 
-âœ… PDFs:          42 files â†’ 1,200 chunks
-âœ… Procedimientos: 15 files â†’ 350 chunks
-âœ… CÃ³digo:        8 files â†’ 400 chunks
-âœ… Presentaciones: 3 files â†’ 180 chunks
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   TOTAL:       2,130 chunks indexed
+✅ PDFs:          42 archivos → 1,200 chunks
+✅ Procedimientos: 15 archivos → 350 chunks
+✅ Código:        8 archivos → 400 chunks
+✅ Presentaciones: 3 archivos → 180 chunks
+────────────────────────────────────────
+   TOTAL:       2,130 chunks indexados
 ```
 
-### Phase 7: Setup Credentials (1 min - AUTO)
+### Fase 7: Configurar credenciales (1 min - AUTO)
 
 ```python
 import os
 import json
-
-
 
 openai_key = os.getenv("AZURE_OPENAI_API_KEY")
 openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -334,28 +308,18 @@ search_key = os.getenv("AZURE_SEARCH_API_KEY")
 search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
 appinsights_key = os.getenv("AZURE_APPINSIGHTS_KEY")
 
-
-
-env_content = f"""# RAG Configuration (Generated: {timestamp})
-
-
+env_content = f"""# Configuración RAG (Generado: {timestamp})
 
 AZURE_OPENAI_ENDPOINT={openai_endpoint}
 AZURE_OPENAI_API_KEY={openai_key}
 OPENAI_CHAT_MODEL=gpt-4o
 OPENAI_DEPLOYMENT=gpt-4o
 
-
-
 AZURE_SEARCH_ENDPOINT={search_endpoint}
 AZURE_SEARCH_API_KEY={search_key}
 SEARCH_INDEX=rag-documents
 
-
-
 AZURE_APPINSIGHTS_KEY={appinsights_key}
-
-
 
 RAG_TOP_K=5
 RAG_TEMPERATURE=0.7
@@ -365,10 +329,10 @@ RAG_MAX_TOKENS=1000
 with open(".env", "w") as f:
     f.write(env_content)
 
-print("âœ… Credentials saved to .env")
+print("✅ Credenciales guardadas en .env")
 ```
 
-### Phase 8: Test Connections (2 min - AUTO)
+### Fase 8: Probar conexiones (2 min - AUTO)
 
 ```python
 import os
@@ -378,8 +342,6 @@ from azure.search.documents import SearchClient
 
 load_dotenv()
 
-
-
 try:
     client = AzureOpenAI(
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
@@ -387,11 +349,9 @@ try:
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
     )
     models = client.models.list()
-    print("âœ… OpenAI connected")
+    print("✅ OpenAI conectado")
 except Exception as e:
-    print(f"âŒ OpenAI failed: {e}")
-
-
+    print(f"❌ OpenAI falló: {e}")
 
 try:
     search_client = SearchClient(
@@ -400,193 +360,190 @@ try:
         credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_API_KEY"))
     )
     search_client.get_document_count()
-    print("âœ… Search connected")
+    print("✅ Search conectado")
 except Exception as e:
-    print(f"âŒ Search failed: {e}")
-
-
+    print(f"❌ Search falló: {e}")
 
 try:
     from azure.monitor.opentelemetry import configure_azure_monitor
     configure_azure_monitor()
-    print("âœ… AppInsights connected")
+    print("✅ AppInsights conectado")
 except Exception as e:
-    print(f"âŒ AppInsights failed: {e}")
+    print(f"❌ AppInsights falló: {e}")
 ```
 
-### Phase 9: Ready! Show Usage (1 min - AUTO)
+### Fase 9: ¡Listo! Mostrar uso (1 min - AUTO)
 
 ```
-ðŸŽ‰ YOUR RAG IS READY!
+🎉 ¡TU RAG ESTÁ LISTO!
 
-Choose your query mode:
+Elige tu modo de consulta:
 
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+═══════════════════════════════════════════════════════════
 
-ðŸ”¹ MODE A: Quick Queries (CLI)
+🔹 MODO A: Consultas rápidas (CLI)
    
-   Usage:
-   $ python scripts/consulta/consultar.py "Â¿CuÃ¡l es la polÃ­tica X?"
+   Uso:
+   $ python .github/skills/rag-query-cli/consultar.py "¿Cuál es la política X?"
    
-   Best for: Quick questions, one-off queries
-   Latency: 2 seconds
-   Cost: $0.02 per query
+   Ideal para: Preguntas rápidas, consultas puntuales
+   Latencia: 2 segundos
+   Coste: $0.02 por consulta
    
-   Example output:
-   > Question: Â¿CuÃ¡l es la polÃ­tica de retenciÃ³n?
-   > Answer: SegÃºn el documento 'data-retention.docx'...
-   > Sources: data-retention.docx (p.3), api-specs.xlsx (Sheet 2)
-   > Time: 2.1s | Tokens: 340 | Cost: $0.02
+   Ejemplo de salida:
+   > Pregunta: ¿Cuál es la política de retención?
+   > Respuesta: Según el documento 'data-retention.docx'...
+   > Fuentes: data-retention.docx (p.3), api-specs.xlsx (Hoja 2)
+   > Tiempo: 2.1s | Tokens: 340 | Coste: $0.02
 
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+═══════════════════════════════════════════════════════════
 
-ðŸ”¹ MODE B: Chat Conversational
+🔹 MODO B: Chat conversacional
    
-   Usage:
+   Uso:
    $ copilot-cli run .github/agents/rag-chat.agent.md
    
-   Best for: Multi-turn conversations, follow-ups, deep dives
-   Latency: 5 seconds per turn
-   Cost: $0.05 per turn
-   Context: Remembers last 10 interactions
+   Ideal para: Conversaciones multi-turno, seguimientos, exploración profunda
+   Latencia: 5 segundos por turno
+   Coste: $0.05 por turno
+   Contexto: Recuerda las últimas 10 interacciones
    
-   Example flow:
-   > Q1: Â¿CÃ³mo despliego el sistema?
-   < A1: SegÃºn deployment-guide.pdf...
-   > Q2: Â¿Y si falla la conexiÃ³n?
-   < A2: Refers back to Q1 context + new answer
+   Ejemplo de flujo:
+   > P1: ¿Cómo despliego el sistema?
+   < R1: Según deployment-guide.pdf...
+   > P2: ¿Y si falla la conexión?
+   < R2: Refiere al contexto de P1 + nueva respuesta
 
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+═══════════════════════════════════════════════════════════
 
-ðŸ”¹ MODE C: REST API (For App Integration)
+🔹 MODO C: API REST (Para integración con apps)
    
-   Usage:
-   $ python scripts/consulta/servidor-api.py --port 8000
+   Uso:
+   $ python .github/skills/rag-api-server/servidor-api.py --port 8000
    
-   Then from your app:
-   curl -X POST http://localhost:8000/query \\
-     -H "Content-Type: application/json" \\
-     -d '{"query": "Â¿CuÃ¡l es X?", "top_k": 5}'
+   Desde tu app:
+   curl -X POST http://localhost:8000/query \
+     -H "Content-Type: application/json" \
+     -d '{"query": "¿Cuál es X?", "top_k": 5}'
    
-   Best for: Web apps, dashboards, workflows
-   Latency: 3 seconds per query
-   Cost: $0.03 per query
-   Features: Batch queries, health checks, CORS enabled
+   Ideal para: Web apps, dashboards, workflows
+   Latencia: 3 segundos por consulta
+   Coste: $0.03 por consulta
+   Features: Consultas batch, health checks, CORS habilitado
 
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+═══════════════════════════════════════════════════════════
 
-ðŸ“– Read detailed comparison: QUERY_MODES.md
+📖 Ver ejemplos de consultas en la sección Inicio Rápido del README
 
-Next steps:
-  1. Choose your mode (A, B, or C)
-  2. Try your first query
-  3. Customize as needed
+Siguientes pasos:
+  1. Elige tu modo (A, B o C)
+  2. Haz tu primera consulta
+  3. Personaliza según necesites
 
-Setup saved to: outputs/setup-summary-{timestamp}.json
+Configuración guardada en: outputs/setup-summary-{timestamp}.json
 ```
 
 ---
 
-## Error Handling
+## Manejo de errores
 
-### If Folder Missing
+### Si falta la carpeta
 ```
-âš ï¸ knowledge/ folder not found.
-   Creating structure...
-   âœ… Created knowledge/{pdfs, procedimientos, codigo, presentaciones}
+⚠️ Carpeta knowledge/ no encontrada.
+   Creando estructura...
+   ✅ Creadas knowledge/{pdfs, procedimientos, codigo, presentaciones}
    
-Please add your documentation files and run wizard again.
+Por favor añade tus documentos y ejecuta el wizard de nuevo.
 ```
 
-### If Interview Fails
+### Si falla la entrevista
 ```
-âŒ User input error: Budget must be > 0
-   Try again...
-```
-
-### If Deployment Fails
-```
-âŒ Azure deployment failed: Quota exceeded for region eastus
-
-Suggestions:
-  A) Try region: westus2
-  B) Request quota increase (takes 24h)
-  C) Reduce tier size
-
-Your choice? (A/B/C)
+❌ Error de entrada: El presupuesto debe ser > 0
+   Inténtalo de nuevo...
 ```
 
-### If Indexing Fails Partially
+### Si falla el despliegue
 ```
-âš ï¸ Indexing partial success:
-   âœ… 2,100 chunks indexed successfully
-   âŒ 30 chunks failed (see errors below)
+❌ Despliegue Azure fallido: Cuota excedida para la región eastus
 
-Failed files:
-  - corrupted-file.pdf: OCR failed
-  - binary-code.so: Not a text file
+Sugerencias:
+  A) Probar región: westus2
+  B) Solicitar aumento de cuota (tarda 24h)
+  C) Reducir tamaño del tier
 
-Continuing with successful chunks. Review logs: logs/rag.log
+¿Tu elección? (A/B/C)
 ```
 
-### If Connection Test Fails
+### Si la indexación falla parcialmente
 ```
-âŒ Connection test failed:
-   âœ… OpenAI: OK
-   âŒ Search: Could not connect (check API key)
-   âš ï¸  AppInsights: Timeout
+⚠️ Indexación parcialmente exitosa:
+   ✅ 2,100 chunks indexados correctamente
+   ❌ 30 chunks fallaron (ver errores abajo)
 
-Troubleshooting:
-  1. Check .env file exists
-  2. Verify API keys: cat .env
-  3. Check Azure region availability
-  4. Run: az login --tenant {tenant-id}
+Archivos fallidos:
+  - corrupted-file.pdf: OCR falló
+  - binary-code.so: No es un fichero de texto
 
-Retry? (Y/n)
+Continuando con los chunks exitosos. Revisar logs: outputs/rag.log
+```
+
+### Si falla la prueba de conexión
+```
+❌ Prueba de conexión fallida:
+   ✅ OpenAI: OK
+   ❌ Search: No se pudo conectar (verificar API key)
+   ⚠️  AppInsights: Timeout
+
+Resolución de problemas:
+  1. Verificar que existe el fichero .env
+  2. Verificar API keys: cat .env
+  3. Comprobar disponibilidad de la región Azure
+  4. Ejecutar: az login --tenant {tenant-id}
+
+¿Reintentar? (S/n)
 ```
 
 ---
 
-## Resumption Support
+## Soporte de reanudación
 
-If wizard is interrupted, save checkpoint:
+Si el wizard se interrumpe, guardar checkpoint:
 
 ```json
 {
     "project_name": "rag-builder",
   "phase": 5,
-  "phase_name": "Index Documents",
-  "status": "in-progress",
+  "phase_name": "Indexar Documentos",
+  "status": "en-progreso",
   "timestamp": "2026-05-13T10:30:00Z",
   "indexed_chunks": 1250,
-  "next": "Complete indexing + Phase 6"
+  "next": "Completar indexación + Fase 6"
 }
 ```
 
-On restart:
+Al reiniciar:
 ```
-ðŸ”„ Detected incomplete setup from 2026-05-13 10:30
+🔄 Detectada configuración incompleta del 2026-05-13 10:30
 
-Last phase: Phase 5 (Index Documents)
-Progress: 1,250 / 2,130 chunks indexed
+Última fase: Fase 5 (Indexar Documentos)
+Progreso: 1,250 / 2,130 chunks indexados
 
-Resume from Phase 5? (Y/n)
+¿Reanudar desde la Fase 5? (S/n)
 ```
 
 ---
 
-## Success Criteria
+## Criterios de éxito
 
-âœ… User sees ONE of these 3 commands and can run it immediately:
+✅ El usuario ve UNO de estos 3 comandos y puede ejecutarlo inmediatamente:
 ```bash
-python scripts/consulta/consultar.py "Â¿CuÃ¡l es X?"
+python .github/skills/rag-query-cli/consultar.py "¿Cuál es X?"
 copilot-cli run .github/agents/rag-chat.agent.md
-python scripts/consulta/servidor-api.py --port 8000
+python .github/skills/rag-api-server/servidor-api.py --port 8000
 ```
 
-âœ… First query returns a result within 2-5 seconds
+✅ La primera consulta devuelve resultado en 2-5 segundos
 
-âœ… Setup summary saved to `outputs/setup-summary-{timestamp}.json`
+✅ Resumen de configuración guardado en `outputs/setup-summary-{timestamp}.json`
 
-âœ… User NEVER had to click Azure Portal
-
+✅ El usuario NUNCA tuvo que abrir el Portal de Azure

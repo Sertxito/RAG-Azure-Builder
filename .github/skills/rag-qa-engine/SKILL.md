@@ -1,56 +1,52 @@
 ---
 name: 'rag-qa-engine'
-description: 'Interactive conversational RAG query engine for document Q&A'
+description: 'Motor de consultas RAG conversacional interactivo para Q&A sobre documentos'
 applyTo: '**/*.agent.md'
 ---
 
 **RAG Reference:** [Retrieval-augmented Generation (RAG) in Azure AI Search - Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview?tabs=videos)
 
-
-
-
-
-**Status:** Production  
-**Version:** 1.0  
-**Last Updated:** May 13, 2026
+**Estado:** Producción
+**Versión:** 1.0
+**Última actualización:** Mayo 13, 2026
 
 ---
 
-## Purpose
+## Propósito
 
-Provides interactive conversational interface for querying documents via RAG. Users ask questions in natural language and receive answers from their indexed knowledge base with source attribution.
+Proporciona interfaz conversacional interactiva para consultar documentos via RAG. Los usuarios hacen preguntas en lenguaje natural y reciben respuestas de su base de conocimiento indexada con atribución de fuentes.
 
-This skill:
-- âœ… **Interactive Loop**: Chat-like interface for multi-turn conversations
-- âœ… **Source Attribution**: Shows document sources and confidence scores
-- âœ… **Token Tracking**: Monitors OpenAI token usage per query
-- âœ… **Error Handling**: Graceful handling of Azure service issues
-- âœ… **UTF-8 Support**: Cross-platform chat (Windows, Linux, Mac)
-- âœ… **Extensible**: Easy to inject real Azure OpenAI/Search APIs
-
----
-
-## Use Cases
-
-### When to use this skill
-
-- **Document Q&A**: Users asking questions about indexed documentation
-- **Interactive Validation**: PoC/validation of RAG capabilities
-- **Knowledge Base Chat**: Company wiki, procedure manuals, runbooks
-- **Multi-turn Conversations**: Follow-up questions, context preservation
-- **Integration**: API wrapper for web/mobile chat interfaces
-
-### When NOT to use
-
-- Batch/non-interactive queries (use REST API)
-- Real-time streaming responses (different implementation)
-- Non-text queries (images, audio)
+Este skill:
+- **Loop Interactivo**: Interfaz tipo chat para conversaciones multi-turno
+- **Atribución de Fuentes**: Muestra documentos fuente y puntuaciones de confianza
+- **Seguimiento de Tokens**: Monitoriza uso de tokens OpenAI por consulta
+- **Manejo de Errores**: Gestión elegante de problemas con servicios Azure
+- **Soporte UTF-8**: Chat multiplataforma (Windows, Linux, Mac)
+- **Extensible**: Fácil de inyectar APIs reales de Azure OpenAI/Search
 
 ---
 
-## Python Usage
+## Casos de Uso
 
-### As a Callable Module
+### Cuándo usar este skill
+
+- **Q&A de Documentos**: Usuarios preguntando sobre documentación indexada
+- **Validación Interactiva**: PoC/validación de capacidades RAG
+- **Chat Base de Conocimiento**: Wiki empresa, manuales de procedimientos, runbooks
+- **Conversaciones Multi-turno**: Preguntas de seguimiento, preservación de contexto
+- **Integración**: Wrapper API para interfaces web/móvil de chat
+
+### Cuándo NO usar
+
+- Consultas batch/no interactivas (usar REST API)
+- Respuestas en streaming real-time (implementación diferente)
+- Consultas no textuales (imágenes, audio)
+
+---
+
+## Uso en Python
+
+### Como Módulo Invocable
 
 ```python
 from pathlib import Path
@@ -60,34 +56,24 @@ sys.path.insert(0, str(Path(__file__).parent / ".github" / "skills" / "rag-qa-en
 
 from chat_engine import RAGChatEngine
 
-
-
 engine = RAGChatEngine(
     azure_openai_endpoint="https://myapp-openai.openai.azure.com/",
     azure_search_endpoint="https://myapp-search.search.windows.net/"
 )
 
-
-
 engine.connect()
-
-
 
 response = engine.query("What is the procedure for X?")
 print(response["answer"])
 print(response["sources"])
 
-
-
 exit_code = engine.run_interactive()
 ```
 
-### As a Standalone CLI
+### Como CLI Independiente
 
 ```bash
 python .github/skills/rag-qa-engine/chat_engine.py
-
-
 
 python run-rag.py --agent chat
 ```
@@ -96,87 +82,85 @@ python run-rag.py --agent chat
 
 ## Input
 
-### Constructor Parameters
+### Parámetros del Constructor
 
-| Parameter | Type | Description | Example |
+| Parámetro | Tipo | Descripción | Ejemplo |
 |-----------|------|-------------|---------|
-| `azure_openai_endpoint` | str | OpenAI Service endpoint | `https://app-openai.openai.azure.com/` |
-| `azure_search_endpoint` | str | AI Search endpoint | `https://app-search.search.windows.net/` |
+| `azure_openai_endpoint` | str | Endpoint del servicio OpenAI | `https://app-openai.openai.azure.com/` |
+| `azure_search_endpoint` | str | Endpoint de AI Search | `https://app-search.search.windows.net/` |
 
-### Query Method
+### Método Query
 
-| Parameter | Type | Description |
+| Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
-| `question` | str | Natural language question |
+| `question` | str | Pregunta en lenguaje natural |
 
 ---
 
 ## Output
 
-### Single Query Response
+### Respuesta de Query Individual
 
 ```python
 {
-    "answer": "str - Generated answer from RAG",
+    "answer": "str - Respuesta generada por RAG",
     "sources": [
         {
-            "title": "str - Document name",
+            "title": "str - Nombre del documento",
             "confidence": "float - 0.0-1.0"
-        },
-        ...
+        }
     ],
-    "tokens_used": "int - OpenAI tokens consumed"
+    "tokens_used": "int - Tokens OpenAI consumidos"
 }
 ```
 
-### Interactive Mode
+### Modo Interactivo
 
-Real-time Q&A loop with:
-- User prompts: `You: [question]`
-- RAG responses with sources
-- Token usage tracking
-- Exit commands: `quit`, `exit`, `salir`
-
----
-
-## Architecture
-
-### Query Flow
-
-```
-User Input
-    â†“
-[Question Analysis]
-    â†“
-[Semantic Search] â†’ Find relevant docs in Azure Search
-    â†“
-[Context Preparation] â†’ Format top-K docs as context
-    â†“
-[gpt-4o Call] â†’ Generate answer with context
-    â†“
-[Source Attribution] â†’ Return sources + confidence
-    â†“
-Display to User
-```
+Loop de Q&A en tiempo real con:
+- Prompts de usuario: `You: [pregunta]`
+- Respuestas RAG con fuentes
+- Seguimiento de uso de tokens
+- Comandos de salida: `quit`, `exit`, `salir`
 
 ---
 
-## Configuration
+## Arquitectura
 
-### Azure Services Required
+### Flujo de Query
+
+```
+Input del Usuario
+    ↓
+[Análisis de Pregunta]
+    ↓
+[Búsqueda Semántica] → Encontrar docs relevantes en Azure Search
+    ↓
+[Preparación de Contexto] → Formatear top-K docs como contexto
+    ↓
+[Llamada gpt-4o] → Generar respuesta con contexto
+    ↓
+[Atribución de Fuentes] → Devolver fuentes + confianza
+    ↓
+Mostrar al Usuario
+```
+
+---
+
+## Configuración
+
+### Servicios Azure Requeridos
 
 1. **Azure OpenAI Service**
-   - Model: gpt-4o or gpt-4o
+   - Modelo: gpt-4o
    - API Version: 2024-08-01
-   - Deployment name: configured in `.env`
+   - Nombre del deployment: configurado en `.env`
 
 2. **Azure AI Search**
-   - Tier: Standard or higher
-   - Vector search enabled
-   - Semantic ranking enabled
-   - Query language: English
+   - Tier: Standard o superior
+   - Vector search habilitado
+   - Semantic ranking habilitado
 
-### Environment Variables
+### Variables de Entorno
 
 ```bash
 AZURE_OPENAI_ENDPOINT=https://[resource]-openai.openai.azure.com/
@@ -189,21 +173,21 @@ AZURE_SEARCH_API_KEY=<key>
 
 ---
 
-## Chat Commands
+## Comandos del Chat
 
-| Command | Effect |
+| Comando | Efecto |
 |---------|--------|
-| `quit` | End session |
-| `exit` | End session |
-| `salir` | End session (Spanish) |
-| `Ctrl+C` | Interrupt |
-| empty line | Skip, continue prompt |
+| `quit` | Finalizar sesión |
+| `exit` | Finalizar sesión |
+| `salir` | Finalizar sesión |
+| `Ctrl+C` | Interrumpir |
+| línea vacía | Saltar, continuar prompt |
 
 ---
 
-## Response Format
+## Formato de Respuesta
 
-### Success Response
+### Respuesta Exitosa
 
 ```
 You: What are the procedures for X?
@@ -211,166 +195,41 @@ You: What are the procedures for X?
 RAG: Based on your documentation, the procedures for X include...
 
 Sources:
-  â€¢ procedures.docx (confidence: 0.95)
-  â€¢ manual_chapter_3.pdf (confidence: 0.87)
+  • procedures.docx (confidence: 0.95)
+  • manual_chapter_3.pdf (confidence: 0.87)
 
 Tokens used: 342
 ```
 
-### Error Response
+### Respuesta de Error
 
 ```
-You: [question]
+You: [pregunta]
 
 Error: Failed to connect to Azure Search
 
-[Continues prompting]
+[Continúa solicitando]
 ```
 
 ---
 
-## Session Management
+## Gestión de Sesión
 
-### Session Tracking
+### Seguimiento de Sesión
 
-- Session start timestamp (for audit)
-- Query count
-- Total tokens used
-- Documents accessed
+- Timestamp de inicio (para auditoría)
+- Conteo de queries
+- Tokens totales usados
+- Documentos accedidos
 
-Logged to:
-- Console output (real-time)
-- `logs/rag-chat.log` (if file logging enabled)
-
----
-
-## Extensibility
-
-### Add Real Azure Integration
-
-```python
-
-
-
-from azure.search.documents import SearchClient
-from openai import AzureOpenAI
-
-def query(self, question: str) -> dict:
-    # 1. Search for relevant docs
-    search_client = SearchClient(...)
-    results = search_client.search(question)
-    
-    # 2. Format context
-    context = "\n".join([doc['content'] for doc in results])
-    
-    # 3. Call OpenAI
-    openai_client = AzureOpenAI(...)
-    response = openai_client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"}]
-    )
-    
-    # 4. Return answer
-    return {"answer": response.choices[0].message.content, "sources": [...]}
-```
+Registrado en:
+- Salida de consola (tiempo real)
+- `outputs/rag-chat.log` (si logging de archivo habilitado)
 
 ---
 
-## Dependencies
+## Extensibilidad
 
-### Required
-- Python 3.10+
-- UTF-8 encoding support
+### Añadir Integración Azure Real
 
-### Optional (for real integration)
-- `azure-search-documents` (Azure Search SDK)
-- `openai` (OpenAI Python SDK)
-
-### Fallback
-Without real Azure SDK, returns mock responses suitable for validation.
-
----
-
-## Logs
-
-- **Console**: Real-time chat output
-- **File**: `logs/rag-chat.log` (if enabled)
-
----
-
-## Error Handling
-
-| Error | Handling |
-|-------|----------|
-| Azure connection failed | Display error, continue prompting |
-| Empty question | Skip, re-prompt |
-| Timeout | Retry or skip |
-| Token limit exceeded | Warn user, suggest shorter questions |
-
----
-
-## Performance
-
-- **Latency**: ~2-5 seconds per query (Azure API time)
-- **Throughput**: Limited by Azure OpenAI quota
-- **Concurrency**: Single-user for interactive mode; for multi-user, use REST API wrapper
-
----
-
-## Related Skills
-
-- [`rag-orchestration`](../rag-orchestration/SKILL.md) - Setup phase for QA engine
-- [`rag-deployment-templates`](../rag-deployment-templates/SKILL.md) - Deploys Search/OpenAI endpoints
-- [`rag-rag-rag-agent-instrumentation`](../rag-rag-rag-agent-instrumentation/SKILL.md) - Query metrics and observability
-
----
-
-## For Next Project
-
-Copy `rag-qa-engine/` skill folder to next project's `.github/skills/` and:
-
-1. Update `.env` with new Azure endpoints
-2. Run orchestration to index new knowledge
-3. Execute chat engine against new docs
-
-Code is 100% reusable.
-
----
-
-## Example Session
-
-```
-============================================================
-RAG Chat Engine - Interactive Query Mode
-============================================================
-
-Connected to Azure OpenAI
-Connected to Azure Search
-
-Type 'quit' or 'exit' to end session
-
-You: What is MENSADEF?
-RAG: MENSADEF is a document management system for...
-
-Sources:
-  â€¢ Overview.pdf (confidence: 0.96)
-  â€¢ Architecture.docx (confidence: 0.88)
-
-Tokens used: 287
-
-You: How do I send an official document?
-RAG: To send an official document in MENSADEF...
-
-Sources:
-  â€¢ Procedures.pdf (confidence: 0.94)
-  â€¢ User Manual Chapter 5.docx (confidence: 0.82)
-
-Tokens used: 312
-
-You: quit
-
-Goodbye!
-```
-
----
-
+Reemplazar el mock engine con llamadas reales a Azure OpenAI y Azure Search usando las credenciales del `.env`.
