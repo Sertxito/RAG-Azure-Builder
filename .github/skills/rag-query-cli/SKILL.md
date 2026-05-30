@@ -1,3 +1,8 @@
+---
+name: 'rag-query-cli'
+description: 'CLI interactivo para consultas RAG con Azure AI Search y Azure OpenAI, con fuentes y métricas.'
+---
+
 # RAG Query CLI — Búsqueda Interactiva de Documentos
 
 **Consulta tu sistema RAG interactivamente desde línea de comandos.**

@@ -1,8 +1,7 @@
 ---
-name: 'RAG: SharePoint Setup'
+name: rag-sharepoint-setup
 description: 'Configura la integración con SharePoint en modo profesional (Azure Search tiempo real) o local (descarga). Gestiona OAuth, resolución de sitio y configuración del indexador.'
 model: 'claude-haiku-4.5'
-tools: true
 skills: ['rag-sharepoint-connector', 'rag-indexer', 'rag-agent-instrumentation']
 depends_on: ['rag-azure-setup']
 ---

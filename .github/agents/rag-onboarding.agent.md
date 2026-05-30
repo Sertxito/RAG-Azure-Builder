@@ -1,8 +1,7 @@
 ---
-name: 'RAG: Onboarding Wizard'
+name: rag-onboarding
 description: 'Piensa antes de desplegar: entiende la arquitectura, costes y ROI primero. Después automatiza el setup completo.'
 model: 'claude-haiku-4.5'
-tools: true
 skills: ['rag-architecture-optimizer', 'rag-cost-analyst', 'rag-deployment-templates']
 depends_on: ['rag-azure-setup', 'rag-indexer-specialist']
 ---

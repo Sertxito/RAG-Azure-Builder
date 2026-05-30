@@ -1,8 +1,7 @@
 ---
-name: 'RAG: Azure Setup'
+name: rag-azure-setup
 description: 'Despliega infraestructura Azure para RAG: OpenAI, AI Search, Application Insights. Usa plantillas Bicep. Valida conectividad y genera credenciales.'
 model: 'claude-haiku-4.5'
-tools: true
 skills: ['rag-deployment-templates', 'rag-agent-instrumentation']
 ---
 

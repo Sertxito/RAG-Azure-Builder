@@ -1,3 +1,8 @@
+---
+name: 'rag-indexer'
+description: 'Indexa documentos desde knowledge/ en Azure AI Search con chunking, metadatos y seguimiento de progreso.'
+---
+
 # RAG Indexer — Indexación de Documentos
 
 **Indexa documentos desde la carpeta `knowledge/` en Azure AI Search.**

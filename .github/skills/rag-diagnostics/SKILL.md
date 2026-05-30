@@ -1,3 +1,8 @@
+---
+name: 'rag-diagnostics'
+description: 'Monitoriza, diagnostica y soluciona problemas del sistema RAG y del estado de Azure AI Search.'
+---
+
 # RAG Diagnostics — Salud del Sistema y Monitorización
 
 **Monitoriza, diagnostica y soluciona problemas de tu sistema RAG.**

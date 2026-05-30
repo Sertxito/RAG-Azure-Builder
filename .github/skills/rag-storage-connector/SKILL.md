@@ -1,3 +1,8 @@
+---
+name: 'rag-storage-connector'
+description: 'Helper de PowerShell para integrar Azure Blob Storage y gestionar credenciales para flujos RAG.'
+---
+
 # RAG Storage Connector — Integración Azure Blob
 
 **Helper basado en PowerShell para credenciales de Azure Blob Storage.**
@@ -44,9 +49,9 @@ AZURE_STORAGE_CONTAINER=documents
 
 ## Skills Relacionados
 
-- [`rag-indexer`](../rag-indexer/SKILL.md) — Usa storage como fuente de documentos
-- [`rag-api-server`](../rag-api-server/SKILL.md) — Endpoint de upload
+- rag-indexer — Usa storage como fuente de documentos
+- rag-api-server — Endpoint de upload
 
-## Ver También
+## Ver Tambien
 
-- [.github/README.md](../../README.md) — Arquitectura
+- README del proyecto en la raiz del repositorio

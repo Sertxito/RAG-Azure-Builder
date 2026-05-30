@@ -1,8 +1,7 @@
 ---
-name: 'RAG: Executive Report Generator'
+name: rag-generate-report
 description: 'Genera informes ejecutivos profesionales en formato DOCX usando Claude Opus 4.7. Crea narrativas convincentes de alto impacto con beneficios cuantificados y recomendaciones estratégicas. Perfecto para presentaciones a clientes y comunicación con stakeholders.'
 model: 'claude-opus-4.7'
-tools: true
 skills: ['rag-report-generator', 'rag-agent-instrumentation']
 ---
 

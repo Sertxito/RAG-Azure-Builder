@@ -27,20 +27,20 @@
     "./agents/rag-validate-deployment.agent.md"
   ],
   "skills": [
-    "./skills/rag-agent-instrumentation/",
-    "./skills/rag-api-server/",
-    "./skills/rag-architecture-optimizer/",
-    "./skills/rag-cost-analyst/",
-    "./skills/rag-cost-scaler/",
-    "./skills/rag-deployment-templates/",
-    "./skills/rag-diagnostics/",
-    "./skills/rag-indexer/",
-    "./skills/rag-orchestration/",
-    "./skills/rag-qa-engine/",
-    "./skills/rag-query-cli/",
-    "./skills/rag-report-generator/",
-    "./skills/rag-sharepoint-connector/",
-    "./skills/rag-storage-connector/",
-    "./skills/rag-validator/"
+    "./skills/rag-agent-instrumentation",
+    "./skills/rag-api-server",
+    "./skills/rag-architecture-optimizer",
+    "./skills/rag-cost-analyst",
+    "./skills/rag-cost-scaler",
+    "./skills/rag-deployment-templates",
+    "./skills/rag-diagnostics",
+    "./skills/rag-indexer",
+    "./skills/rag-orchestration",
+    "./skills/rag-qa-engine",
+    "./skills/rag-query-cli",
+    "./skills/rag-report-generator",
+    "./skills/rag-sharepoint-connector",
+    "./skills/rag-storage-connector",
+    "./skills/rag-validator"
   ]
 }
