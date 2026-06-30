@@ -10,6 +10,7 @@ import os
 import sys
 import json
 import time
+from pathlib import Path
 from typing import Optional
 from openai import AzureOpenAI
 from azure.search.documents import SearchClient
@@ -27,7 +28,9 @@ class RAGExecutor:
     """Execute RAG queries against indexed documentation"""
 
     def __init__(self):
-        load_dotenv()
+        # Load environment from the active project folder first.
+        load_dotenv(dotenv_path=Path.cwd() / ".env", override=False)
+        load_dotenv(override=False)
         
         # Initialize OpenAI client
         self.openai_client = AzureOpenAI(
@@ -44,9 +47,10 @@ class RAGExecutor:
         )
         
         self.model = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+        self.semantic_config_name = os.getenv("AZURE_SEARCH_SEMANTIC_CONFIG", "my-semantic-config")
         self.metrics = {}
 
-    def search_documents(self, query: str, top_k: int = 5) -> list:
+    def search_documents(self, query: str, top_k: int = 3) -> list:
         """
         Search for relevant documents using hybrid search + semantic ranking
         (Azure best practices for Classic RAG)
@@ -72,8 +76,8 @@ class RAGExecutor:
             search_results = self.search_client.search(
                 search_text=clean_query,
                 query_type="semantic",
-                semantic_configuration_name="default",
-                select=["id", "content", "source_file", "metadata_storage_path"],
+                semantic_configuration_name=self.semantic_config_name,
+                select=["id", "content", "source_file"],
                 top=top_k
             )
             
@@ -134,11 +138,13 @@ class RAGExecutor:
         """
         start_time = time.time()
         
-        # Build context from retrieved docs
-        context = "\n\n".join([
-            f"Source: {doc['source']}\n{doc['content']}"
-            for doc in context_docs
-        ])
+        # Build compact context to stay within strict TPM limits.
+        compact_docs = context_docs[:3]
+        context_parts = []
+        for doc in compact_docs:
+            snippet = (doc.get("content", "") or "")[:700]
+            context_parts.append(f"Source: {doc['source']}\n{snippet}")
+        context = "\n\n".join(context_parts)
         
         # Build prompt
         system_prompt = """You are a helpful assistant answering questions based on provided documentation.
@@ -153,26 +159,59 @@ Question: {query}
 
 Answer:"""
 
-        try:
-            response = self.openai_client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.3,
-                max_tokens=1000
-            )
-            
-            inference_time = time.time() - start_time
-            self.metrics["inference_time_ms"] = inference_time * 1000
-            self.metrics["tokens_used"] = response.usage.total_tokens
-            
-            return response.choices[0].message.content
-            
-        except Exception as e:
-            print(f"❌ Inference error: {e}")
-            return f"Error generating response: {e}"
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=1,
+                    max_completion_tokens=1000
+                )
+
+                inference_time = time.time() - start_time
+                self.metrics["inference_time_ms"] = inference_time * 1000
+                self.metrics["tokens_used"] = response.usage.total_tokens
+
+                return response.choices[0].message.content
+
+            except Exception as e:
+                error_text = str(e)
+                is_rate_limit = "rate_limit_exceeded" in error_text or "429" in error_text
+                if is_rate_limit and attempt < max_retries:
+                    wait_seconds = 5 * attempt
+                    print(f"⚠️  Rate limit temporal. Reintentando en {wait_seconds}s (intento {attempt}/{max_retries})...")
+                    time.sleep(wait_seconds)
+                    continue
+
+                if "content_filter" in error_text or "ResponsibleAIPolicyViolation" in error_text:
+                    sources = []
+                    highlights = []
+                    for doc in compact_docs:
+                        source = doc.get("source", "unknown")
+                        if source not in sources:
+                            sources.append(source)
+                        text = (doc.get("content", "") or "").replace("\n", " ").strip()
+                        if text:
+                            highlights.append(text[:220])
+
+                    fallback_lines = [
+                        "Respuesta extractiva (fallback por content filter):",
+                        "- Se localizaron contenidos relevantes en las fuentes recuperadas.",
+                    ]
+                    if highlights:
+                        fallback_lines.append(f"- Fragmento 1: {highlights[0]}")
+                    if len(highlights) > 1:
+                        fallback_lines.append(f"- Fragmento 2: {highlights[1]}")
+                    if sources:
+                        fallback_lines.append("- Fuentes: " + ", ".join(sources))
+                    return "\n".join(fallback_lines)
+
+                print(f"❌ Inference error: {e}")
+                return f"Error generating response: {e}"
 
     def execute(self, query: str, verbose: bool = False) -> dict:
         """

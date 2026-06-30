@@ -9,6 +9,8 @@ Usage:
 import os
 import sys
 import json
+import re
+import unicodedata
 from pathlib import Path
 from typing import List, Dict
 from azure.search.documents import SearchClient
@@ -37,7 +39,9 @@ class RAGIndexer:
     """Index documents into Azure AI Search"""
 
     def __init__(self):
-        load_dotenv()
+        # Load environment from the active project folder first.
+        load_dotenv(dotenv_path=Path.cwd() / ".env", override=False)
+        load_dotenv(override=False)
         
         self.search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
         self.search_key = os.getenv("AZURE_SEARCH_API_KEY")
@@ -153,6 +157,72 @@ class RAGIndexer:
             self.stats["errors"].append(f"SQL extraction {file_path}: {e}")
             return ""
 
+    def extract_text_from_xlsx(self, file_path: Path) -> str:
+        """Extract text from XLSX/XLS file"""
+        try:
+            from openpyxl import load_workbook
+
+            wb = load_workbook(file_path, data_only=True, read_only=True)
+            lines = []
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+                lines.append(f"Sheet: {sheet_name}")
+                for row in ws.iter_rows(values_only=True):
+                    values = [str(cell).strip() for cell in row if cell is not None and str(cell).strip()]
+                    if values:
+                        lines.append(" | ".join(values))
+            return "\n".join(lines)
+        except Exception as e:
+            print(f"⚠️  Error reading Excel {file_path}: {e}")
+            self.stats["errors"].append(f"Excel extraction {file_path}: {e}")
+            return ""
+
+    def extract_text_from_pptx(self, file_path: Path) -> str:
+        """Extract text from PPTX file"""
+        try:
+            from pptx import Presentation
+
+            prs = Presentation(file_path)
+            lines = []
+            for idx, slide in enumerate(prs.slides, start=1):
+                lines.append(f"Slide {idx}")
+                for shape in slide.shapes:
+                    text = getattr(shape, "text", None)
+                    if text and text.strip():
+                        lines.append(text.strip())
+            return "\n".join(lines)
+        except Exception as e:
+            print(f"⚠️  Error reading PPTX {file_path}: {e}")
+            self.stats["errors"].append(f"PPTX extraction {file_path}: {e}")
+            return ""
+
+    def _normalize_text(self, text: str) -> str:
+        """Normalize extracted text to improve chunk quality."""
+        if not text:
+            return ""
+
+        text = unicodedata.normalize("NFKC", text)
+        text = text.replace("\u00a0", " ").replace("\u00ad", "")
+
+        fixed_lines = []
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            # Heuristic: join words that were extracted as separated characters
+            # Example: "e c i m i e n t o" -> "ecimiento"
+            tokens = line.split()
+            if len(tokens) >= 8:
+                single_char_tokens = sum(1 for t in tokens if len(t) == 1 and t.isalpha())
+                if single_char_tokens / len(tokens) >= 0.6:
+                    line = "".join(tokens)
+
+            line = re.sub(r"\s+", " ", line)
+            fixed_lines.append(line)
+
+        return "\n".join(fixed_lines)
+
     def extract_text_from_file(self, file_path: Path) -> str:
         """Extract text from various file types"""
         suffix = file_path.suffix.lower()
@@ -163,6 +233,10 @@ class RAGIndexer:
             return self.extract_text_from_docx(file_path)
         elif suffix == ".sql":
             return self.extract_text_from_sql(file_path)
+        elif suffix in [".xlsx", ".xls"]:
+            return self.extract_text_from_xlsx(file_path)
+        elif suffix == ".pptx":
+            return self.extract_text_from_pptx(file_path)
         elif suffix in [".txt", ".md", ".xml"]:
             try:
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -199,6 +273,11 @@ class RAGIndexer:
             text = self.extract_text_from_file(file_path)
             if not text:
                 print(f"⚠️  No content extracted from {file_path.name}")
+                return 0
+
+            text = self._normalize_text(text)
+            if not text:
+                print(f"⚠️  No usable text extracted from {file_path.name}")
                 return 0
             
             # Create chunks
