@@ -1,5 +1,4 @@
 param location string = 'eastus'
-param resourceGroupName string = 'demo-rg'
 
 @allowed(['basic', 'standard'])
 @description('Azure AI Search tier. Use basic for Mínima (~$25/mo), standard for Estándar/Máxima (~$295/mo per replica).')
@@ -20,6 +19,40 @@ param logRetentionDays int = 30
 
 @description('Enable Managed Identity + RBAC (recommended for Máxima/production). Eliminates API key usage.')
 param enableManagedIdentity bool = false
+
+@description('Chat deployment name in Azure OpenAI account.')
+param openAiChatDeploymentName string = 'gpt-4o'
+
+@description('Chat model name (for example: gpt-4o, gpt-4.1-mini).')
+param openAiChatModelName string = 'gpt-4o'
+
+@description('Chat model version supported in the selected region.')
+param openAiChatModelVersion string = '2024-08-06'
+
+@allowed(['GlobalStandard', 'Standard', 'GlobalProvisionedManaged'])
+@description('Chat model SKU. Use GlobalStandard/Standard for consumption tiers and GlobalProvisionedManaged where required by region/model availability.')
+param openAiChatSkuName string = 'GlobalStandard'
+
+@minValue(1)
+@description('Chat model capacity units.')
+param openAiChatSkuCapacity int = 10
+
+@description('Embedding deployment name in Azure OpenAI account.')
+param embeddingDeploymentName string = 'text-embedding-3-small'
+
+@description('Embedding model name (for example: text-embedding-3-small, text-embedding-ada-002).')
+param embeddingModelName string = 'text-embedding-3-small'
+
+@description('Embedding model version supported in the selected region.')
+param embeddingModelVersion string = '1'
+
+@allowed(['GlobalStandard', 'Standard', 'GlobalProvisionedManaged'])
+@description('Embedding model SKU. Most regions use Standard for text-embedding-3-small.')
+param embeddingSkuName string = 'Standard'
+
+@minValue(1)
+@description('Embedding model capacity units.')
+param embeddingSkuCapacity int = 50
 
 // Resource names
 var openaiName = 'openai-${uniqueString(resourceGroup().id)}'
@@ -48,18 +81,18 @@ resource openai 'Microsoft.CognitiveServices/accounts@2023-10-01-preview' = {
 // Use 'sku' with name (Standard/GlobalStandard) and capacity instead.
 // Check available SKUs per region: az cognitiveservices model list --location <region>
 // gpt-4o: minimum quality model for RAG (gpt-4o-mini is below quality bar)
-resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-10-01-preview' = {
+resource chatDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-10-01-preview' = {
   parent: openai
-  name: 'gpt-4o'
+  name: openAiChatDeploymentName
   sku: {
-    name: 'GlobalStandard'
-    capacity: 10
+    name: openAiChatSkuName
+    capacity: openAiChatSkuCapacity
   }
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'gpt-4o'
-      version: '2024-08-06'
+      name: openAiChatModelName
+      version: openAiChatModelVersion
     }
   }
 }
@@ -67,17 +100,17 @@ resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-
 // Embedding model for vector search
 resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-10-01-preview' = {
   parent: openai
-  name: 'text-embedding-3-small'
-  dependsOn: [gpt4oDeployment]
+  name: embeddingDeploymentName
+  dependsOn: [chatDeployment]
   sku: {
-    name: 'Standard'
-    capacity: 50
+    name: embeddingSkuName
+    capacity: embeddingSkuCapacity
   }
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'text-embedding-3-small'
-      version: '1'
+      name: embeddingModelName
+      version: embeddingModelVersion
     }
   }
 }
@@ -171,7 +204,7 @@ resource roleOpenAI 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (e
   scope: openai
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', cognitiveServicesOpenAIUser)
-    principalId: enableManagedIdentity ? managedIdentity.properties.principalId : ''
+    principalId: enableManagedIdentity ? managedIdentity!.properties.principalId : ''
     principalType: 'ServicePrincipal'
   }
 }
@@ -182,7 +215,7 @@ resource roleSearchReader 'Microsoft.Authorization/roleAssignments@2022-04-01' =
   scope: search
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', searchIndexDataReader)
-    principalId: enableManagedIdentity ? managedIdentity.properties.principalId : ''
+    principalId: enableManagedIdentity ? managedIdentity!.properties.principalId : ''
     principalType: 'ServicePrincipal'
   }
 }
@@ -193,7 +226,7 @@ resource roleSearchContributor 'Microsoft.Authorization/roleAssignments@2022-04-
   scope: search
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', searchIndexDataContributor)
-    principalId: enableManagedIdentity ? managedIdentity.properties.principalId : ''
+    principalId: enableManagedIdentity ? managedIdentity!.properties.principalId : ''
     principalType: 'ServicePrincipal'
   }
 }
@@ -204,18 +237,21 @@ resource roleStorageReader 'Microsoft.Authorization/roleAssignments@2022-04-01' 
   scope: storage
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataReader)
-    principalId: enableManagedIdentity ? managedIdentity.properties.principalId : ''
+    principalId: enableManagedIdentity ? managedIdentity!.properties.principalId : ''
     principalType: 'ServicePrincipal'
   }
 }
 
 // Outputs
 output openaiEndpoint string = openai.properties.endpoint
+#disable-next-line outputs-should-not-contain-secrets
 output openaiKey string = openai.listKeys().key1
 output searchEndpoint string = 'https://${searchName}.search.windows.net'
+#disable-next-line outputs-should-not-contain-secrets
 output searchKey string = search.listAdminKeys().primaryKey
+#disable-next-line outputs-should-not-contain-secrets
 output storageConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${storage.listKeys().keys[0].value}'
 output appInsightsKey string = appInsights.properties.InstrumentationKey
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
-output managedIdentityClientId string = enableManagedIdentity ? managedIdentity.properties.clientId : ''
-output managedIdentityPrincipalId string = enableManagedIdentity ? managedIdentity.properties.principalId : ''
+output managedIdentityClientId string = enableManagedIdentity ? managedIdentity!.properties.clientId : ''
+output managedIdentityPrincipalId string = enableManagedIdentity ? managedIdentity!.properties.principalId : ''

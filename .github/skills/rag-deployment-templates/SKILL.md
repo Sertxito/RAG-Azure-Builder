@@ -17,10 +17,18 @@ Plantillas Infrastructure-as-Code y orquestación de despliegue para stack Azure
 - Application Insights + Log Analytics
 - Indexación de documentos y runners de despliegue
 - Todo configurado, vinculado y automatizado
+- Compatible con cualquier suscripción Azure: `deploy.sh` auto-detecta modelos/SKU válidos por región y ejecuta `what-if` antes de desplegar
 
 ## Uso
 
 ```bash
+# Auto (recomendado): detecta modelo/SKU por región y valida with what-if
+cd .github/skills/rag-deployment-templates
+./deploy.sh <resource-group> <region>
+
+# Ejemplo
+./deploy.sh rag-rg northeurope
+
 # Mínima (Basic Search, 30d logs, LRS)
 cd infra/
 az deployment group create \
@@ -42,6 +50,18 @@ az deployment group create \
   --template-file main.bicep \
   --parameters searchTier=standard searchReplicaCount=3 searchPartitionCount=2 \
                storageRedundancy=Standard_ZRS logRetentionDays=365
+```
+
+### Overrides opcionales (si quieres forzar un modelo específico)
+
+```bash
+CHAT_MODEL_NAME=gpt-5.4-mini \
+CHAT_MODEL_VERSION=2026-03-17 \
+CHAT_SKU_NAME=GlobalStandard \
+EMBED_MODEL_NAME=text-embedding-3-small \
+EMBED_MODEL_VERSION=1 \
+EMBED_SKU_NAME=GlobalStandard \
+./deploy.sh rag-rg northeurope
 ```
 
 ## Recursos Desplegados

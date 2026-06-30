@@ -5,17 +5,13 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "13597517912526837114"
+      "templateHash": "16383449862008666010"
     }
   },
   "parameters": {
     "location": {
       "type": "string",
       "defaultValue": "eastus"
-    },
-    "resourceGroupName": {
-      "type": "string",
-      "defaultValue": "demo-rg"
     },
     "searchTier": {
       "type": "string",
@@ -66,6 +62,88 @@
       "metadata": {
         "description": "Enable Managed Identity + RBAC (recommended for Máxima/production). Eliminates API key usage."
       }
+    },
+    "openAiChatDeploymentName": {
+      "type": "string",
+      "defaultValue": "gpt-4o",
+      "metadata": {
+        "description": "Chat deployment name in Azure OpenAI account."
+      }
+    },
+    "openAiChatModelName": {
+      "type": "string",
+      "defaultValue": "gpt-4o",
+      "metadata": {
+        "description": "Chat model name (for example: gpt-4o, gpt-4.1-mini)."
+      }
+    },
+    "openAiChatModelVersion": {
+      "type": "string",
+      "defaultValue": "2024-08-06",
+      "metadata": {
+        "description": "Chat model version supported in the selected region."
+      }
+    },
+    "openAiChatSkuName": {
+      "type": "string",
+      "defaultValue": "GlobalStandard",
+      "allowedValues": [
+        "GlobalStandard",
+        "Standard",
+        "GlobalProvisionedManaged"
+      ],
+      "metadata": {
+        "description": "Chat model SKU. Use GlobalStandard/Standard for consumption tiers and GlobalProvisionedManaged where required by region/model availability."
+      }
+    },
+    "openAiChatSkuCapacity": {
+      "type": "int",
+      "defaultValue": 10,
+      "minValue": 1,
+      "metadata": {
+        "description": "Chat model capacity units."
+      }
+    },
+    "embeddingDeploymentName": {
+      "type": "string",
+      "defaultValue": "text-embedding-3-small",
+      "metadata": {
+        "description": "Embedding deployment name in Azure OpenAI account."
+      }
+    },
+    "embeddingModelName": {
+      "type": "string",
+      "defaultValue": "text-embedding-3-small",
+      "metadata": {
+        "description": "Embedding model name (for example: text-embedding-3-small, text-embedding-ada-002)."
+      }
+    },
+    "embeddingModelVersion": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Embedding model version supported in the selected region."
+      }
+    },
+    "embeddingSkuName": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "GlobalStandard",
+        "Standard",
+        "GlobalProvisionedManaged"
+      ],
+      "metadata": {
+        "description": "Embedding model SKU. Most regions use Standard for text-embedding-3-small."
+      }
+    },
+    "embeddingSkuCapacity": {
+      "type": "int",
+      "defaultValue": 50,
+      "minValue": 1,
+      "metadata": {
+        "description": "Embedding model capacity units."
+      }
     }
   },
   "variables": {
@@ -99,16 +177,16 @@
     {
       "type": "Microsoft.CognitiveServices/accounts/deployments",
       "apiVersion": "2023-10-01-preview",
-      "name": "[format('{0}/{1}', variables('openaiName'), 'gpt-4o')]",
+      "name": "[format('{0}/{1}', variables('openaiName'), parameters('openAiChatDeploymentName'))]",
       "sku": {
-        "name": "GlobalStandard",
-        "capacity": 10
+        "name": "[parameters('openAiChatSkuName')]",
+        "capacity": "[parameters('openAiChatSkuCapacity')]"
       },
       "properties": {
         "model": {
           "format": "OpenAI",
-          "name": "gpt-4o",
-          "version": "2024-08-06"
+          "name": "[parameters('openAiChatModelName')]",
+          "version": "[parameters('openAiChatModelVersion')]"
         }
       },
       "dependsOn": [
@@ -118,20 +196,20 @@
     {
       "type": "Microsoft.CognitiveServices/accounts/deployments",
       "apiVersion": "2023-10-01-preview",
-      "name": "[format('{0}/{1}', variables('openaiName'), 'text-embedding-3-small')]",
+      "name": "[format('{0}/{1}', variables('openaiName'), parameters('embeddingDeploymentName'))]",
       "sku": {
-        "name": "Standard",
-        "capacity": 50
+        "name": "[parameters('embeddingSkuName')]",
+        "capacity": "[parameters('embeddingSkuCapacity')]"
       },
       "properties": {
         "model": {
           "format": "OpenAI",
-          "name": "text-embedding-3-small",
-          "version": "1"
+          "name": "[parameters('embeddingModelName')]",
+          "version": "[parameters('embeddingModelVersion')]"
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openaiName'), 'gpt-4o')]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('openaiName'), parameters('openAiChatDeploymentName'))]",
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('openaiName'))]"
       ]
     },
